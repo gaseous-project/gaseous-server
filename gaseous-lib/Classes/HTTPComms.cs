@@ -44,7 +44,7 @@ namespace gaseous_server.Classes
         private static int _rateLimitWindow = 60;
         // max requests allowed in the time window
         private static int _maxRequestsPerWindow = 100;
-        private static int _rateLimit429WaitTimeSeconds = 60;
+        private static int _rateLimit429WaitTimeSeconds = 1;
         private static int _rateLimit420WaitTimeSeconds = 120;
 
         // Track request timestamps for rate limiting per host
@@ -233,46 +233,52 @@ namespace gaseous_server.Classes
                 var effectiveToken = linkedCts.Token;
 
                 // --- Rate limiting logic scoped to host ---
-                // Extract host from URL
+                // Only apply pre-flight throttling when an explicit per-host override exists.
+                // The default global counters are retained for compatibility, but they no
+                // longer impose an unconditional wait before every request to a busy host.
                 var uri = url;
                 string host = uri.Host;
-                bool shouldWait = false;
-                int waitMs = 0;
+                RateLimitOptions? rateLimitOptions = null;
                 lock (_rateLimitLock)
                 {
-                    DateTime now = DateTime.UtcNow;
-                    // Get or create the queue for this host
-                    if (!_hostRequestTimestamps.ContainsKey(host))
-                    {
-                        _hostRequestTimestamps[host] = new Queue<DateTime>();
-                    }
-                    var hostQueue = _hostRequestTimestamps[host];
-                    // Rate limit window and max requests - use per-host override if available
-                    int window = _rateLimitWindow;
-                    int maxReq = _maxRequestsPerWindow;
-                    if (_perHostRateLimits.TryGetValue(host, out var opts))
-                    {
-                        window = opts.WindowSeconds;
-                        maxReq = opts.MaxRequests;
-                    }
-                    // Remove timestamps outside the window
-                    while (hostQueue.Count > 0 && (now - hostQueue.Peek()).TotalSeconds > window)
-                    {
-                        hostQueue.Dequeue();
-                    }
-                    // If we've hit the max requests for the window, calculate how long to wait
-                    if (hostQueue.Count >= maxReq)
-                    {
-                        shouldWait = true;
-                        // Wait until the oldest request is outside the window
-                        var oldest = hostQueue.Peek();
-                        waitMs = (int)Math.Max(0, (window - (now - oldest).TotalSeconds) * 1000);
-                    }
+                    _perHostRateLimits.TryGetValue(host, out rateLimitOptions);
                 }
-                // If rate limit exceeded for this host, wait before sending the request
-                if (shouldWait && waitMs > 0)
+
+                if (rateLimitOptions != null)
                 {
-                    await Task.Delay(waitMs, cancellationToken);
+                    bool shouldWait = false;
+                    int waitMs = 0;
+
+                    lock (_rateLimitLock)
+                    {
+                        DateTime now = DateTime.UtcNow;
+
+                        if (!_hostRequestTimestamps.ContainsKey(host))
+                        {
+                            _hostRequestTimestamps[host] = new Queue<DateTime>();
+                        }
+
+                        var hostQueue = _hostRequestTimestamps[host];
+                        int window = rateLimitOptions.WindowSeconds;
+                        int maxReq = rateLimitOptions.MaxRequests;
+
+                        while (hostQueue.Count > 0 && (now - hostQueue.Peek()).TotalSeconds > window)
+                        {
+                            hostQueue.Dequeue();
+                        }
+
+                        if (hostQueue.Count >= maxReq)
+                        {
+                            shouldWait = true;
+                            var oldest = hostQueue.Peek();
+                            waitMs = (int)Math.Max(0, (window - (now - oldest).TotalSeconds) * 1000);
+                        }
+                    }
+
+                    if (shouldWait && waitMs > 0)
+                    {
+                        await Task.Delay(waitMs, cancellationToken);
+                    }
                 }
 
                 try
@@ -326,11 +332,15 @@ namespace gaseous_server.Classes
                     // Record this request timestamp for rate limiting (per host)
                     lock (_rateLimitLock)
                     {
-                        if (!_hostRequestTimestamps.ContainsKey(host))
+                        if (_perHostRateLimits.ContainsKey(host))
                         {
-                            _hostRequestTimestamps[host] = new Queue<DateTime>();
+                            if (!_hostRequestTimestamps.ContainsKey(host))
+                            {
+                                _hostRequestTimestamps[host] = new Queue<DateTime>();
+                            }
+
+                            _hostRequestTimestamps[host].Enqueue(DateTime.UtcNow);
                         }
-                        _hostRequestTimestamps[host].Enqueue(DateTime.UtcNow);
                     }
 
                     // Populate response object with status code and headers

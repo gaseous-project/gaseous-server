@@ -217,24 +217,31 @@ namespace gaseous_server.Classes
         /// </remarks>
         public static void RemoveOldImportStates()
         {
-            DateTime now = DateTime.UtcNow;
-            TimeSpan timeSpan = new TimeSpan(0, 60, 0);
-            DateTime cutoff = now.Subtract(timeSpan);
-
-            // remove completed import states older than 60 minutes
-            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Completed && x.LastUpdated < cutoff);
-            // count completed import states in datetime order and remove old completed import states if there are more than 10
-            List<ImportStateItem> completedImportStates = _importStates.Where(x => x.State == ImportStateItem.ImportState.Completed).OrderByDescending(x => x.LastUpdated).ToList();
-            if (completedImportStates.Count > 10)
+            try
             {
-                List<ImportStateItem> oldCompletedImportStates = completedImportStates.Skip(10).ToList();
-                foreach (ImportStateItem importState in oldCompletedImportStates)
+                DateTime now = DateTime.UtcNow;
+                TimeSpan timeSpan = new TimeSpan(0, 60, 0);
+                DateTime cutoff = now.Subtract(timeSpan);
+
+                // remove completed import states older than 60 minutes
+                _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Completed && x.LastUpdated < cutoff);
+                // count completed import states in datetime order and remove old completed import states if there are more than 10
+                List<ImportStateItem> completedImportStates = _importStates.Where(x => x.State == ImportStateItem.ImportState.Completed).OrderByDescending(x => x.LastUpdated).ToList();
+                if (completedImportStates.Count > 10)
                 {
-                    _importStates.Remove(importState);
+                    List<ImportStateItem> oldCompletedImportStates = completedImportStates.Skip(10).ToList();
+                    foreach (ImportStateItem importState in oldCompletedImportStates)
+                    {
+                        _importStates.Remove(importState);
+                    }
                 }
+                // remove pending import states that don't have a file on disk
+                _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Pending && !File.Exists(x.FileName));
             }
-            // remove pending import states that don't have a file on disk
-            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Pending && !File.Exists(x.FileName));
+            catch (Exception ex)
+            {
+                // this is fine - if we fail to remove old import states, it's not the end of the world, and we don't want to crash the application because of it
+            }
         }
 
         /// <summary>
@@ -572,10 +579,13 @@ namespace gaseous_server.Classes
             }
 
             string fileName = Path.GetFileName(filePath);
+            string fileExt = Path.GetExtension(filePath);
             if (SourcesThatAllowROMRename.Contains(signature.Rom.SignatureSource))
             {
                 // the source of the signature allows us to rename the ROM to match the game name - use the game name as the file name if it's not null or empty, otherwise use the original file name
                 fileName = Common.ReturnValueIfNull(signature.Rom.Name, fileName).ToString();
+                // ensure the file name ends with the same extension as the original file
+                fileName = Path.ChangeExtension(fileName, fileExt);
             }
 
             dbDict.Add("platformid", Common.ReturnValueIfNull(platform.Id, 0));
