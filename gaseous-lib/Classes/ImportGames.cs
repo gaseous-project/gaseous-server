@@ -584,6 +584,10 @@ namespace gaseous_server.Classes
             {
                 // the source of the signature allows us to rename the ROM to match the game name - use the game name as the file name if it's not null or empty, otherwise use the original file name
                 fileName = Common.ReturnValueIfNull(signature.Rom.Name, fileName).ToString();
+
+                // santise the file name to remove any invalid characters
+                fileName = fileName.Replace(":", " -").Replace("/", "-").Replace("\\", "-").Replace("*", "").Replace("?", "").Replace("\"", "").Replace("<", "").Replace(">", "").Replace("|", "");
+
                 // ensure the file name ends with the same extension as the original file
                 fileName = Path.ChangeExtension(fileName, fileExt);
             }

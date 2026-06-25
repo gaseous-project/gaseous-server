@@ -277,7 +277,7 @@ namespace gaseous_server.Classes
 
                     if (shouldWait && waitMs > 0)
                     {
-                        await Task.Delay(waitMs, cancellationToken);
+                        await Task.Delay(waitMs, effectiveToken);
                     }
                 }
 
