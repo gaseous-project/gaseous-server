@@ -443,37 +443,37 @@ namespace gaseous_server.Classes
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
+			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "").Result;
 		}
 
 		public DataTable ExecuteCMD(string Command, DatabaseMemoryCacheOptions? CacheOptions)
 		{
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
+			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "").Result;
 		}
 
 		public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters)
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
-			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
+			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "").Result;
 		}
 
 		public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions)
 		{
-			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
+			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "").Result;
 		}
 
 		public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
-			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString).Result;
 		}
 
 		public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
 		{
-			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString).Result;
 		}
 
 		public List<Dictionary<string, object>> ExecuteCMDDict(string Command)
@@ -481,37 +481,37 @@ namespace gaseous_server.Classes
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
+			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "").Result;
 		}
 
 		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, DatabaseMemoryCacheOptions? CacheOptions)
 		{
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
+			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "").Result;
 		}
 
 		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters)
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
-			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "").Result;
 		}
 
 		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions)
 		{
-			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "").Result;
 		}
 
 		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
-			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString).Result;
 		}
 
 		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
 		{
-			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString).Result;
 		}
 		#endregion Synchronous Database Access
 
@@ -521,37 +521,37 @@ namespace gaseous_server.Classes
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
+			return await _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
 		}
 
 		public async Task<DataTable> ExecuteCMDAsync(string Command, DatabaseMemoryCacheOptions? CacheOptions)
 		{
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
+			return await _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
 		}
 
 		public async Task<DataTable> ExecuteCMDAsync(string Command, Dictionary<string, object> Parameters)
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
-			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
+			return await _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
 		}
 
 		public async Task<DataTable> ExecuteCMDAsync(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions)
 		{
-			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
+			return await _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
 		}
 
 		public async Task<DataTable> ExecuteCMDAsync(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
-			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			return await _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
 		}
 
 		public async Task<DataTable> ExecuteCMDAsync(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
 		{
-			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			return await _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
 		}
 
 		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command)
@@ -559,44 +559,44 @@ namespace gaseous_server.Classes
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
+			return await _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
 		}
 
 		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, DatabaseMemoryCacheOptions? CacheOptions)
 		{
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
+			return await _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
 		}
 
 		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, Dictionary<string, object> Parameters)
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
-			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
+			return await _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
 		}
 
 		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions)
 		{
-			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
+			return await _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
 		}
 
 		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
 
-			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			return await _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
 		}
 
 		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
 		{
-			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			return await _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
 		}
 		#endregion Asynchronous Database Access
 
 
-		private List<Dictionary<string, object>> _ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
+		private async Task<List<Dictionary<string, object>>> _ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
 		{
-			DataTable dataTable = _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+			DataTable dataTable = await _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
 
 			// convert datatable to dictionary
 			List<Dictionary<string, object?>> rows = new List<Dictionary<string, object?>>();
@@ -622,7 +622,7 @@ namespace gaseous_server.Classes
 			return rows;
 		}
 
-		private DataTable _ExecuteCMD(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
+		private async Task<DataTable> _ExecuteCMD(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
 		{
 			string CacheKey = Command + string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
 			if (CacheOptions?.CacheKey != null)
@@ -659,7 +659,7 @@ namespace gaseous_server.Classes
 			{
 				case databaseType.MySql:
 					MySQLServerConnector conn = new MySQLServerConnector(ConnectionString);
-					DataTable RetTable = conn.ExecCMD(Command, Parameters, Timeout);
+					DataTable RetTable = await conn.ExecCMD(Command, Parameters, Timeout);
 					if (CacheOptions is object && CacheOptions.CacheEnabled)
 					{
 						DatabaseMemoryCache.SetCacheObject(CacheKey, RetTable, CacheOptions.ExpirationSeconds);
@@ -777,20 +777,21 @@ namespace gaseous_server.Classes
 		private partial class MySQLServerConnector
 		{
 			private string DBConn = "";
+			private const int MaxDeadlockRetries = 3;
 
 			public MySQLServerConnector(string ConnectionString)
 			{
 				DBConn = ConnectionString;
 			}
 
-			public DataTable ExecCMD(string SQL, Dictionary<string, object> Parameters, int Timeout)
+			public async Task<DataTable> ExecCMD(string SQL, Dictionary<string, object> Parameters, int Timeout)
 			{
 				DataTable RetTable = new DataTable();
 
 				Logging.LogKey(Logging.LogType.Debug, "process.database", "database.connecting_to_database", null, null, null, true);
 				using (MySqlConnection conn = new MySqlConnection(DBConn))
 				{
-					conn.Open();
+					await conn.OpenAsync();
 
 					MySqlCommand cmd = new MySqlCommand
 					{
@@ -804,30 +805,42 @@ namespace gaseous_server.Classes
 						cmd.Parameters.AddWithValue(Parameter, Parameters[Parameter]);
 					}
 
-					try
+					for (int attempt = 1; attempt <= MaxDeadlockRetries; attempt++)
 					{
-						Logging.LogKey(Logging.LogType.Debug, "process.database", "database.executing_sql", null, new[] { SQL }, null, true);
-						if (Parameters.Count > 0)
+						try
 						{
-							string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
-							Logging.LogKey(Logging.LogType.Debug, "process.database", "database.parameters", null, new[] { dictValues }, null, true);
-						}
-						RetTable.Load(cmd.ExecuteReader());
-					}
-					catch (Exception ex)
-					{
-						Logging.LogKey(Logging.LogType.Critical, "process.database", "database.error_executing_sql", null, new[] { SQL }, ex);
-#if DEBUG
-						if (Parameters.Count > 0)
-						{
-							Logging.LogKey(Logging.LogType.Critical, "process.database", "database.parameters");
-							foreach (string param in Parameters.Keys)
+							Logging.LogKey(Logging.LogType.Debug, "process.database", "database.executing_sql", null, new[] { SQL }, null, true);
+							if (Parameters.Count > 0)
 							{
-								string typeName = Parameters[param]?.GetType().ToString() ?? "unknown";
-								Logging.LogKey(Logging.LogType.Critical, "process.database", param + " = " + Parameters[param] + " (" + typeName + ")");
+								string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+								Logging.LogKey(Logging.LogType.Debug, "process.database", "database.parameters", null, new[] { dictValues }, null, true);
 							}
+
+							RetTable.Load(await cmd.ExecuteReaderAsync());
+							break;
 						}
+						catch (MySqlException ex) when (IsRetryableMySqlLockError(ex) && attempt < MaxDeadlockRetries)
+						{
+							int delayMs = GetRetryDelayMilliseconds(attempt);
+							Logging.LogKey(Logging.LogType.Warning, "process.database", "database.deadlock_retrying", null, new[] { attempt.ToString(), MaxDeadlockRetries.ToString(), delayMs.ToString() }, ex);
+							Thread.Sleep(delayMs);
+						}
+						catch (Exception ex)
+						{
+							Logging.LogKey(Logging.LogType.Critical, "process.database", "database.error_executing_sql", null, new[] { SQL }, ex);
+#if DEBUG
+							if (Parameters.Count > 0)
+							{
+								Logging.LogKey(Logging.LogType.Critical, "process.database", "database.parameters");
+								foreach (string param in Parameters.Keys)
+								{
+									string typeName = Parameters[param]?.GetType().ToString() ?? "unknown";
+									Logging.LogKey(Logging.LogType.Critical, "process.database", param + " = " + Parameters[param] + " (" + typeName + ")");
+								}
+							}
 #endif
+							break;
+						}
 					}
 
 					Logging.LogKey(Logging.LogType.Debug, "process.database", "database.closing_database_connection", null, null, null, true);
@@ -858,21 +871,33 @@ namespace gaseous_server.Classes
 						cmd.Parameters.AddWithValue(Parameter, Parameters[Parameter]);
 					}
 
-					try
+					for (int attempt = 1; attempt <= MaxDeadlockRetries; attempt++)
 					{
-						Logging.LogKey(Logging.LogType.Debug, "process.database", "database.executing_sql", null, new[] { SQL }, null, true);
-						if (Parameters.Count > 0)
+						try
 						{
-							string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
-							Logging.LogKey(Logging.LogType.Debug, "process.database", "database.parameters", null, new[] { dictValues }, null, true);
+							Logging.LogKey(Logging.LogType.Debug, "process.database", "database.executing_sql", null, new[] { SQL }, null, true);
+							if (Parameters.Count > 0)
+							{
+								string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+								Logging.LogKey(Logging.LogType.Debug, "process.database", "database.parameters", null, new[] { dictValues }, null, true);
+							}
+
+							result = cmd.ExecuteNonQuery();
+							break;
 						}
-						result = cmd.ExecuteNonQuery();
-					}
-					catch (Exception ex)
-					{
-						Logging.LogKey(Logging.LogType.Critical, "process.database", "database.error_executing_sql", null, new[] { SQL }, ex);
-						Trace.WriteLine("Error executing " + SQL);
-						Trace.WriteLine("Full exception: " + ex.ToString());
+						catch (MySqlException ex) when (IsRetryableMySqlLockError(ex) && attempt < MaxDeadlockRetries)
+						{
+							int delayMs = GetRetryDelayMilliseconds(attempt);
+							Logging.LogKey(Logging.LogType.Warning, "process.database", "database.deadlock_retrying", null, new[] { attempt.ToString(), MaxDeadlockRetries.ToString(), delayMs.ToString() }, ex);
+							Thread.Sleep(delayMs);
+						}
+						catch (Exception ex)
+						{
+							Logging.LogKey(Logging.LogType.Critical, "process.database", "database.error_executing_sql", null, new[] { SQL }, ex);
+							Trace.WriteLine("Error executing " + SQL);
+							Trace.WriteLine("Full exception: " + ex.ToString());
+							break;
+						}
 					}
 
 					Logging.LogKey(Logging.LogType.Debug, "process.database", "database.closing_database_connection", null, null, null, true);
@@ -902,6 +927,19 @@ namespace gaseous_server.Classes
 					transaction.Commit();
 					conn.Close();
 				}
+			}
+
+			private static bool IsRetryableMySqlLockError(MySqlException ex)
+			{
+				// 1213 = deadlock found, 1205 = lock wait timeout exceeded.
+				return ex.Number == 1213 || ex.Number == 1205;
+			}
+
+			private static int GetRetryDelayMilliseconds(int attempt)
+			{
+				int baseDelay = (int)Math.Pow(2, attempt - 1) * 100;
+				int jitter = Random.Shared.Next(25, 101);
+				return baseDelay + jitter;
 			}
 
 			private MySqlCommand buildcommand(MySqlConnection Conn, string SQL, Dictionary<string, object> Parameters, int Timeout)

@@ -395,7 +395,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
             // execute sql
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            _ = db.ExecuteCMDAsync(sql, objectDict);
+            await db.ExecuteCMDAsync(sql, objectDict);
         }
 
         /// <summary>
@@ -563,44 +563,86 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             return EndpointType;
         }
 
+        List<string> _relationTables = new List<string>();
         private async Task StoreRelations(string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
         {
-            string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "';";
-            DataTable data = await db.ExecuteCMDAsync(sql);
-            if (data.Rows.Count == 0)
+            string sql = "";
+
+            string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
+            if (!_relationTables.Contains(TableName))
             {
-                // table doesn't exist, create it
-                sql = @"
+                sql = "SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "';";
+                DataTable data = await db.ExecuteCMDAsync(sql);
+                if (data.Rows.Count == 0)
+                {
+                    // table doesn't exist, create it
+                    sql = @"
                     CREATE TABLE 
                     `" + Config.DatabaseConfiguration.DatabaseName + "`.`" + TableName + @"` 
                     (`" + PrimaryTable + @"SourceId` INT NOT NULL, 
                     `" + PrimaryTable + @"Id` BIGINT NOT NULL, 
                     `" + SecondaryTable + @"Id` BIGINT NOT NULL, 
                     PRIMARY KEY (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
-                await db.ExecuteCMDAsync(sql);
-            }
-            else
-            {
-                // clean existing records for this object
-                sql = "DELETE FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid AND `" + PrimaryTable + "SourceId` = @sourcetype;";
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("objectid", ObjectId);
-                dbDict.Add("sourcetype", _sourceType);
-                await db.ExecuteCMDAsync(sql, dbDict);
+                    await db.ExecuteCMDAsync(sql);
+                }
+                _relationTables.Add(TableName);
             }
 
-            // insert data
-            long[] RelationValues = Newtonsoft.Json.JsonConvert.DeserializeObject<long[]>(Relations);
-            foreach (long RelationValue in RelationValues)
+            // Build desired relation set from payload.
+            long[] relationValues = Newtonsoft.Json.JsonConvert.DeserializeObject<long[]>(Relations) ?? Array.Empty<long>();
+            List<long> desiredIds = relationValues
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            // Load existing relation ids for this object/source.
+            sql = "SELECT `" + SecondaryTable + "Id` FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid AND `" + PrimaryTable + "SourceId` = @sourcetype;";
+            Dictionary<string, object> existingDict = new Dictionary<string, object>
+            {
+                { "objectid", ObjectId },
+                { "sourcetype", _sourceType }
+            };
+            DataTable existingData = await db.ExecuteCMDAsync(sql, existingDict);
+
+            List<long> existingIds = new List<long>();
+            foreach (DataRow row in existingData.Rows)
+            {
+                if (row[0] != DBNull.Value)
+                {
+                    existingIds.Add(Convert.ToInt64(row[0]));
+                }
+            }
+            existingIds = existingIds
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            List<long> idsToDelete = existingIds.Except(desiredIds).OrderBy(x => x).ToList();
+            List<long> idsToInsert = desiredIds.Except(existingIds).OrderBy(x => x).ToList();
+
+            // Delete only relations that are no longer present.
+            foreach (long relationValue in idsToDelete)
+            {
+                sql = "DELETE FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid AND `" + PrimaryTable + "SourceId` = @sourcetype AND `" + SecondaryTable + "Id` = @relationvalue;";
+                Dictionary<string, object> deleteDict = new Dictionary<string, object>
+                {
+                    { "objectid", ObjectId },
+                    { "sourcetype", _sourceType },
+                    { "relationvalue", relationValue }
+                };
+                await db.ExecuteCMDAsync(sql, deleteDict);
+            }
+
+            // Insert only new relations.
+            foreach (long relationValue in idsToInsert)
             {
                 sql = "INSERT IGNORE INTO " + TableName + " (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`) VALUES (@sourceid, @objectid, @relationvalue);";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>
                 {
                     { "sourceid", _sourceType },
                     { "objectid", ObjectId },
-                    { "relationvalue", RelationValue }
+                    { "relationvalue", relationValue }
                 };
                 await db.ExecuteCMDAsync(sql, dbDict);
             }

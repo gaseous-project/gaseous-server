@@ -1004,6 +1004,8 @@ namespace gaseous_server.Classes
 					continue;
 				}
 
+				await EnsureBundleForMetadataRefresh(item, forceRefresh);
+
 				Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_game_using_source_with_source_id", null, new string[] { metadataItem.SignatureGameName, metadataItem.Id.ToString(), item.SourceType.ToString(), item.SourceId.ToString() });
 				Game? game = await Metadata.Games.GetGame(item.SourceType, item.SourceId, true, forceRefresh);
 
@@ -1129,6 +1131,23 @@ namespace gaseous_server.Classes
 							await Metadata.Themes.GetGame_ThemesAsync(item.SourceType, themeId);
 						}
 					}
+				}
+			}
+		}
+
+		private static async Task EnsureBundleForMetadataRefresh(MetadataMap.MetadataMapItem item, bool forceRefresh)
+		{
+			if (item.SourceType != FileSignature.MetadataSources.IGDB)
+			{
+				return;
+			}
+
+			var provider = Metadata.Metadata.MetadataProviders.FirstOrDefault(x => x.SourceType == item.SourceType);
+			if (provider?.ProxyProvider is gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider hasheousProxy)
+			{
+				if (item.SourceId != null)
+				{
+					await hasheousProxy.EnsureGameBundleAsync((long)item.SourceId, forceRefresh);
 				}
 			}
 		}

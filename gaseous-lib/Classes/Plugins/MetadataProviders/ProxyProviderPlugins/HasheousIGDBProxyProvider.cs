@@ -4,6 +4,7 @@ using HasheousClient.Models;
 using Newtonsoft.Json.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -61,6 +62,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// HTTP communications handler for making API requests.
         /// </summary>
         private readonly HTTPComms comms = new HTTPComms();
+
+        // Prevent concurrent extraction/reads against the same bundle directory.
+        private static readonly ConcurrentDictionary<long, SemaphoreSlim> _bundleLocks = new ConcurrentDictionary<long, SemaphoreSlim>();
 
         /// <summary>
         /// Retrieves a single entity of type T using the Hasheous IGDB bundle cache.
@@ -314,6 +318,16 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             return null;
         }
 
+        /// <summary>
+        /// Ensures the local IGDB bundle for a game is present and current.
+        /// </summary>
+        /// <param name="gameId">The game identifier.</param>
+        /// <param name="forceDownload">If true, forces a re-download of the bundle.</param>
+        public async Task EnsureGameBundleAsync(long gameId, bool forceDownload = false)
+        {
+            await GetGameBundleAsync<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>(gameId, forceDownload);
+        }
+
         private async Task<T?> GetGameBundleAsync<T>(long id, bool forceDownload = false) where T : class
         {
             // we can only handle bundles for games - check T type
@@ -324,41 +338,51 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                 return null;
             }
 
-            // check if bundle exists
-            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id);
-            bool forceDownloadBundle = forceDownload;
-            if (Directory.Exists(bundlePath))
+            var bundleLock = _bundleLocks.GetOrAdd(id, _ => new SemaphoreSlim(1, 1));
+            await bundleLock.WaitAsync();
+            try
             {
-                // open the game.json file
-                string gameJsonPath = Path.Combine(bundlePath, "Game.json");
-                if (!File.Exists(gameJsonPath))
+
+                // check if bundle exists
+                string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id);
+                bool forceDownloadBundle = forceDownload;
+                if (Directory.Exists(bundlePath))
                 {
-                    forceDownloadBundle = true;
-                }
-                else
-                {
-                    // load and deserialize the game.json file to Dictionary<string, object>
-                    string gameJsonContent = await File.ReadAllTextAsync(gameJsonPath);
-                    Dictionary<string, object>? gameDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJsonContent);
-                    if (gameDict != null)
+                    // open the game.json file
+                    string gameJsonPath = Path.Combine(bundlePath, "Game.json");
+                    if (!File.Exists(gameJsonPath))
                     {
-                        // check the updated_at field - if older than 365 days, redownload
-                        if (gameDict.ContainsKey("updated_at"))
+                        forceDownloadBundle = true;
+                    }
+                    else
+                    {
+                        // load and deserialize the game.json file to Dictionary<string, object>
+                        string gameJsonContent = await File.ReadAllTextAsync(gameJsonPath);
+                        Dictionary<string, object>? gameDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJsonContent);
+                        if (gameDict != null)
                         {
-                            if (!DateTime.TryParse(gameDict["updated_at"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime updatedAt))
+                            // check the updated_at field - if older than 365 days, redownload
+                            if (gameDict.ContainsKey("updated_at"))
                             {
-                                // could not parse date, force download
-                                forceDownloadBundle = true;
-                            }
-                            else if (DateTime.UtcNow.Subtract(updatedAt).TotalDays > 365)
-                            {
-                                // older than 365 days, force download
-                                forceDownloadBundle = true;
+                                if (!DateTime.TryParse(gameDict["updated_at"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime updatedAt))
+                                {
+                                    // could not parse date, force download
+                                    forceDownloadBundle = true;
+                                }
+                                else if (DateTime.UtcNow.Subtract(updatedAt).TotalDays > 365)
+                                {
+                                    // older than 365 days, force download
+                                    forceDownloadBundle = true;
+                                }
+                                else
+                                {
+                                    // else, do not force download
+                                    forceDownloadBundle = false;
+                                }
                             }
                             else
                             {
-                                // else, do not force download
-                                forceDownloadBundle = false;
+                                forceDownloadBundle = true;
                             }
                         }
                         else
@@ -366,313 +390,389 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                             forceDownloadBundle = true;
                         }
                     }
-                    else
-                    {
-                        forceDownloadBundle = true;
-                    }
-                }
-            }
-            else
-            {
-                forceDownloadBundle = true;
-            }
-
-            if (forceDownloadBundle)
-            {
-                // download the bundle via Hasheous Proxy
-                Uri bundleUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/Bundles/IGDB/{id}.bundle");
-                string downloadDirectory = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
-                string downloadedBundlePath = Path.Combine(downloadDirectory, $"{id}.bundle.zip");
-                if (Directory.Exists(downloadDirectory) == true)
-                {
-                    Directory.Delete(downloadDirectory, true);
-                }
-                Directory.CreateDirectory(downloadDirectory);
-                if (!Directory.Exists(bundlePath))
-                {
-                    Directory.CreateDirectory(bundlePath);
-                }
-                Dictionary<string, string> headers = new Dictionary<string, string>
-                {
-                    { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
-                };
-                var response = await comms.DownloadToFileAsync(bundleUrl, downloadedBundlePath, headers);
-                if (response.StatusCode == 200)
-                {
-                    // extract the bundle
-                    using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
-                    {
-                        foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
-                        {
-                            await entry.WriteToDirectoryAsync(bundlePath);
-                        }
-                    }
-                    // delete the temp file
-                    try
-                    {
-                        File.Delete(downloadedBundlePath);
-                    }
-                    catch
-                    {
-                        // ignore - should get cleaned up later by the temp file cleaner anyway
-                    }
                 }
                 else
                 {
-                    // failed to download bundle
+                    forceDownloadBundle = true;
+                }
+
+                if (forceDownloadBundle)
+                {
+                    // download the bundle via Hasheous Proxy
+                    Uri bundleUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/Bundles/IGDB/{id}.bundle");
+                    string downloadDirectory = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
+                    string downloadedBundlePath = Path.Combine(downloadDirectory, $"{id}.bundle.zip");
+                    if (Directory.Exists(downloadDirectory) == true)
+                    {
+                        Directory.Delete(downloadDirectory, true);
+                    }
+                    Directory.CreateDirectory(downloadDirectory);
+                    if (!Directory.Exists(bundlePath))
+                    {
+                        Directory.CreateDirectory(bundlePath);
+                    }
+                    Dictionary<string, string> headers = new Dictionary<string, string>
+                {
+                    { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
+                };
+                    var response = await comms.DownloadToFileAsync(bundleUrl, downloadedBundlePath, headers);
+                    if (response.StatusCode == 200)
+                    {
+                        // extract the bundle
+                        using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
+                        {
+                            foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
+                            {
+                                await entry.WriteToDirectoryAsync(bundlePath);
+                            }
+                        }
+
+                        // warm resized image cache variants so image requests avoid first-hit resize cost.
+                        await PreGenerateBundleImageCacheAsync(bundlePath, id);
+
+                        // delete the temp file
+                        try
+                        {
+                            File.Delete(downloadedBundlePath);
+                        }
+                        catch
+                        {
+                            // ignore - should get cleaned up later by the temp file cleaner anyway
+                        }
+                    }
+                    else
+                    {
+                        // failed to download bundle
+                        return null;
+                    }
+                }
+
+                // bundle should now be present for loading - extract the requested entity from the Game.json file
+                // open the game.json file and deserialize to Dictionary<string, object>
+                string gameJsonFilePath = Path.Combine(bundlePath, "Game.json");
+                if (!File.Exists(gameJsonFilePath))
+                {
                     return null;
                 }
-            }
+                string gameJson = await File.ReadAllTextAsync(gameJsonFilePath);
+                Dictionary<string, object>? gameEntity = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJson);
 
-            // bundle should now be present for loading - extract the requested entity from the Game.json file
-            // open the game.json file and deserialize to Dictionary<string, object>
-            string gameJsonFilePath = Path.Combine(bundlePath, "Game.json");
-            if (!File.Exists(gameJsonFilePath))
-            {
-                return null;
-            }
-            string gameJson = await File.ReadAllTextAsync(gameJsonFilePath);
-            Dictionary<string, object>? gameEntity = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJson);
-
-            // now build T from the deserialized data and return
-            // create a new game instance - this is the root of the bundle, we'll then create sub-entities as needed and store them in the database
-            if (gameEntity != null)
-            {
-                T? game = Activator.CreateInstance(typeof(T)) as T;
-                foreach (var prop in typeof(T).GetProperties())
+                // now build T from the deserialized data and return
+                // create a new game instance - this is the root of the bundle, we'll then create sub-entities as needed and store them in the database
+                if (gameEntity != null)
                 {
-                    // get the json property name from the JsonProperty attribute if present
-                    var jsonPropAttr = prop.GetCustomAttributes(typeof(Newtonsoft.Json.JsonPropertyAttribute), true).FirstOrDefault() as Newtonsoft.Json.JsonPropertyAttribute;
-                    string jsonPropName = prop.Name;
-                    if (jsonPropAttr != null && !string.IsNullOrEmpty(jsonPropAttr.PropertyName))
+                    T? game = Activator.CreateInstance(typeof(T)) as T;
+                    foreach (var prop in typeof(T).GetProperties())
                     {
-                        jsonPropName = jsonPropAttr.PropertyName;
-                    }
-
-                    // set the property value if present in the deserialized data
-                    if (gameEntity.ContainsKey(jsonPropName))
-                    {
-                        object? value = gameEntity[jsonPropName];
-                        if (value != null)
+                        // get the json property name from the JsonProperty attribute if present
+                        var jsonPropAttr = prop.GetCustomAttributes(typeof(Newtonsoft.Json.JsonPropertyAttribute), true).FirstOrDefault() as Newtonsoft.Json.JsonPropertyAttribute;
+                        string jsonPropName = prop.Name;
+                        if (jsonPropAttr != null && !string.IsNullOrEmpty(jsonPropAttr.PropertyName))
                         {
-                            // handle type conversion if necessary
-                            // we need to map types from the dictionary:
-                            // - if the object is a List<Dictionary<string, object>>, then we need to extract the keys and convert to List<long> for ID lists, the values themselves should be saved to the database under the type of object they represent
-                            // - if the object is a class with an id property (e.g., Company, Genre, etc.), we need to extract the id and set that as long
-                            if (prop.PropertyType == typeof(List<long>))
+                            jsonPropName = jsonPropAttr.PropertyName;
+                        }
+
+                        // set the property value if present in the deserialized data
+                        if (gameEntity.ContainsKey(jsonPropName))
+                        {
+                            object? value = gameEntity[jsonPropName];
+                            if (value != null)
                             {
-                                List<long> idList = new List<long>();
-
-                                // convert value to the appropriate dictionary type using Activator
-                                string serializedValue = Newtonsoft.Json.JsonConvert.SerializeObject(value);
-                                Type elementType = GetPropertyMetadataType(typeof(T), jsonPropName) ?? typeof(object);
-                                Type dictType = typeof(Dictionary<,>).MakeGenericType(typeof(string), elementType);
-                                var deserializedDict = Activator.CreateInstance(dictType);
-                                try
+                                // handle type conversion if necessary
+                                // we need to map types from the dictionary:
+                                // - if the object is a List<Dictionary<string, object>>, then we need to extract the keys and convert to List<long> for ID lists, the values themselves should be saved to the database under the type of object they represent
+                                // - if the object is a class with an id property (e.g., Company, Genre, etc.), we need to extract the id and set that as long
+                                if (prop.PropertyType == typeof(List<long>))
                                 {
-                                    deserializedDict = Newtonsoft.Json.JsonConvert.DeserializeObject(serializedValue, dictType);
+                                    List<long> idList = new List<long>();
 
-                                    if (deserializedDict != null)
+                                    // convert value to the appropriate dictionary type using Activator
+                                    string serializedValue = Newtonsoft.Json.JsonConvert.SerializeObject(value);
+                                    Type elementType = GetPropertyMetadataType(typeof(T), jsonPropName) ?? typeof(object);
+                                    Type dictType = typeof(Dictionary<,>).MakeGenericType(typeof(string), elementType);
+                                    var deserializedDict = Activator.CreateInstance(dictType);
+                                    try
                                     {
-                                        var dictEnumerable = deserializedDict as System.Collections.IDictionary;
-                                        if (dictEnumerable != null)
-                                        {
-                                            foreach (System.Collections.DictionaryEntry item in dictEnumerable)
-                                            {
-                                                var itemValue = item.Value;
-                                                if (itemValue != null)
-                                                {
-                                                    // use reflection to get the id property
-                                                    var idProp = itemValue.GetType().GetProperty("id") ?? itemValue.GetType().GetProperty("Id") ?? itemValue.GetType().GetProperty("ID");
-                                                    if (idProp != null)
-                                                    {
-                                                        var idValue = idProp.GetValue(itemValue);
-                                                        if (idValue != null)
-                                                        {
-                                                            idList.Add(Convert.ToInt64(idValue));
+                                        deserializedDict = Newtonsoft.Json.JsonConvert.DeserializeObject(serializedValue, dictType);
 
-                                                            if (Storage != null)
+                                        if (deserializedDict != null)
+                                        {
+                                            var dictEnumerable = deserializedDict as System.Collections.IDictionary;
+                                            if (dictEnumerable != null)
+                                            {
+                                                foreach (System.Collections.DictionaryEntry item in dictEnumerable)
+                                                {
+                                                    var itemValue = item.Value;
+                                                    if (itemValue != null)
+                                                    {
+                                                        // use reflection to get the id property
+                                                        var idProp = itemValue.GetType().GetProperty("id") ?? itemValue.GetType().GetProperty("Id") ?? itemValue.GetType().GetProperty("ID");
+                                                        if (idProp != null)
+                                                        {
+                                                            var idValue = idProp.GetValue(itemValue);
+                                                            if (idValue != null)
                                                             {
-                                                                // save the item to storage using runtime type
-                                                                await StoreCacheValueWithRuntimeType(elementType, itemValue);
+                                                                idList.Add(Convert.ToInt64(idValue));
+
+                                                                if (Storage != null)
+                                                                {
+                                                                    // save the item to storage using runtime type
+                                                                    await StoreCacheValueWithRuntimeType(elementType, itemValue);
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+
+                                        prop.SetValue(game, idList);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logging.LogKey(Logging.LogType.Warning, "BundleDeserialization", $"Failed to deserialize list property {jsonPropName} for Game bundle ID {id}: {ex.Message}");
+                                        Logging.LogKey(Logging.LogType.Warning, "BundleDeserialization", $"Serialized value: {serializedValue}");
+                                    }
+                                }
+                                else if (prop.PropertyType == typeof(long) && value is Newtonsoft.Json.Linq.JObject jObject && jObject["id"] != null)
+                                {
+                                    // store the referenced object to cache if we can resolve its type
+                                    Type? elementType = GetPropertyMetadataType(typeof(T), jsonPropName);
+                                    if (Storage != null && elementType != null)
+                                    {
+                                        try
+                                        {
+                                            var typedObj = jObject.ToObject(elementType);
+                                            if (typedObj != null)
+                                            {
+                                                await StoreCacheValueWithRuntimeType(elementType, typedObj);
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Console.WriteLine($"Error caching {jsonPropName}: {ex.Message}");
+                                        }
                                     }
 
-                                    prop.SetValue(game, idList);
+                                    long idValue = jObject["id"]!.ToObject<long>();
+                                    prop.SetValue(game, idValue);
                                 }
-                                catch (Exception ex)
+                                else if (prop.PropertyType == typeof(DateTimeOffset?))
                                 {
-                                    Logging.LogKey(Logging.LogType.Warning, "BundleDeserialization", $"Failed to deserialize list property {jsonPropName} for Game bundle ID {id}: {ex.Message}");
-                                    Logging.LogKey(Logging.LogType.Warning, "BundleDeserialization", $"Serialized value: {serializedValue}");
+                                    // need to convert from DateTime or string to DateTimeOffset
+                                    DateTimeOffset dtoValue;
+                                    if (value is DateTime dt)
+                                    {
+                                        dtoValue = new DateTimeOffset(dt);
+                                    }
+                                    else
+                                    {
+                                        dtoValue = DateTimeOffset.Parse(value.ToString() ?? string.Empty);
+                                    }
+                                    prop.SetValue(game, dtoValue);
                                 }
-                            }
-                            else if (prop.PropertyType == typeof(long) && value is Newtonsoft.Json.Linq.JObject jObject && jObject["id"] != null)
-                            {
-                                // store the referenced object to cache if we can resolve its type
-                                Type? elementType = GetPropertyMetadataType(typeof(T), jsonPropName);
-                                if (Storage != null && elementType != null)
+                                else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
                                 {
+                                    // convert to int
                                     try
                                     {
-                                        var typedObj = jObject.ToObject(elementType);
-                                        if (typedObj != null)
+                                        int intValue = Convert.ToInt32(value);
+                                        prop.SetValue(game, intValue);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error converting int property {jsonPropName}: {ex.Message}");
+                                    }
+                                }
+                                else if (prop.PropertyType == typeof(int[]))
+                                {
+                                    // convert to int array
+                                    try
+                                    {
+                                        int[]? intArrayValue = ((JArray)value).ToObject<int[]>();
+                                        if (intArrayValue != null)
                                         {
-                                            await StoreCacheValueWithRuntimeType(elementType, typedObj);
+                                            prop.SetValue(game, intArrayValue);
                                         }
                                     }
                                     catch (Exception ex)
                                     {
-                                        Console.WriteLine($"Error caching {jsonPropName}: {ex.Message}");
+                                        Console.WriteLine($"Error converting int array property {jsonPropName}: {ex.Message}");
                                     }
                                 }
-
-                                long idValue = jObject["id"]!.ToObject<long>();
-                                prop.SetValue(game, idValue);
-                            }
-                            else if (prop.PropertyType == typeof(DateTimeOffset?))
-                            {
-                                // need to convert from DateTime or string to DateTimeOffset
-                                DateTimeOffset dtoValue;
-                                if (value is DateTime dt)
+                                else if (prop.PropertyType == typeof(uint) || prop.PropertyType == typeof(uint?))
                                 {
-                                    dtoValue = new DateTimeOffset(dt);
+                                    // convert to uint
+                                    try
+                                    {
+                                        uint uintValue = Convert.ToUInt32(value);
+                                        prop.SetValue(game, uintValue);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error converting int property {jsonPropName}: {ex.Message}");
+                                    }
+                                }
+                                else if (prop.PropertyType == typeof(long) || prop.PropertyType == typeof(long?))
+                                {
+                                    // convert to long
+                                    try
+                                    {
+                                        long longValue = Convert.ToInt64(value);
+                                        prop.SetValue(game, longValue);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error converting long property {jsonPropName}: {ex.Message}");
+                                    }
+                                }
+                                else if (prop.PropertyType == typeof(ulong) || prop.PropertyType == typeof(ulong?))
+                                {
+                                    // convert to ulong
+                                    try
+                                    {
+                                        ulong ulongValue = Convert.ToUInt64(value);
+                                        prop.SetValue(game, ulongValue);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error converting long property {jsonPropName}: {ex.Message}");
+                                    }
+                                }
+                                else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
+                                {
+                                    // convert to double
+                                    try
+                                    {
+                                        double doubleValue = Convert.ToDouble(value);
+                                        prop.SetValue(game, doubleValue);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error converting long property {jsonPropName}: {ex.Message}");
+                                    }
+                                }
+                                else if (prop.PropertyType == typeof(float) || prop.PropertyType == typeof(float?))
+                                {
+                                    // convert to float
+                                    try
+                                    {
+                                        float floatValue = Convert.ToSingle(value);
+                                        prop.SetValue(game, floatValue);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error converting long property {jsonPropName}: {ex.Message}");
+                                    }
+                                }
+                                else if (prop.PropertyType.IsEnum)
+                                {
+                                    try
+                                    {
+                                        object? enumValue = Enum.Parse(prop.PropertyType, value.ToString() ?? string.Empty);
+                                        prop.SetValue(game, enumValue);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error converting enum property {jsonPropName}: {ex.Message}");
+                                    }
                                 }
                                 else
                                 {
-                                    dtoValue = DateTimeOffset.Parse(value.ToString() ?? string.Empty);
-                                }
-                                prop.SetValue(game, dtoValue);
-                            }
-                            else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
-                            {
-                                // convert to int
-                                try
-                                {
-                                    int intValue = Convert.ToInt32(value);
-                                    prop.SetValue(game, intValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting int property {jsonPropName}: {ex.Message}");
-                                }
-                            }
-                            else if (prop.PropertyType == typeof(int[]))
-                            {
-                                // convert to int array
-                                try
-                                {
-                                    int[]? intArrayValue = ((JArray)value).ToObject<int[]>();
-                                    if (intArrayValue != null)
+                                    // direct conversion
+                                    try
                                     {
-                                        prop.SetValue(game, intArrayValue);
+                                        object? convertedValue = Convert.ChangeType(value, prop.PropertyType);
+                                        prop.SetValue(game, convertedValue);
                                     }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting int array property {jsonPropName}: {ex.Message}");
-                                }
-                            }
-                            else if (prop.PropertyType == typeof(uint) || prop.PropertyType == typeof(uint?))
-                            {
-                                // convert to uint
-                                try
-                                {
-                                    uint uintValue = Convert.ToUInt32(value);
-                                    prop.SetValue(game, uintValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting int property {jsonPropName}: {ex.Message}");
-                                }
-                            }
-                            else if (prop.PropertyType == typeof(long) || prop.PropertyType == typeof(long?))
-                            {
-                                // convert to long
-                                try
-                                {
-                                    long longValue = Convert.ToInt64(value);
-                                    prop.SetValue(game, longValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting long property {jsonPropName}: {ex.Message}");
-                                }
-                            }
-                            else if (prop.PropertyType == typeof(ulong) || prop.PropertyType == typeof(ulong?))
-                            {
-                                // convert to ulong
-                                try
-                                {
-                                    ulong ulongValue = Convert.ToUInt64(value);
-                                    prop.SetValue(game, ulongValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting long property {jsonPropName}: {ex.Message}");
-                                }
-                            }
-                            else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
-                            {
-                                // convert to double
-                                try
-                                {
-                                    double doubleValue = Convert.ToDouble(value);
-                                    prop.SetValue(game, doubleValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting long property {jsonPropName}: {ex.Message}");
-                                }
-                            }
-                            else if (prop.PropertyType == typeof(float) || prop.PropertyType == typeof(float?))
-                            {
-                                // convert to float
-                                try
-                                {
-                                    float floatValue = Convert.ToSingle(value);
-                                    prop.SetValue(game, floatValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting long property {jsonPropName}: {ex.Message}");
-                                }
-                            }
-                            else if (prop.PropertyType.IsEnum)
-                            {
-                                try
-                                {
-                                    object? enumValue = Enum.Parse(prop.PropertyType, value.ToString() ?? string.Empty);
-                                    prop.SetValue(game, enumValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting enum property {jsonPropName}: {ex.Message}");
-                                }
-                            }
-                            else
-                            {
-                                // direct conversion
-                                try
-                                {
-                                    object? convertedValue = Convert.ChangeType(value, prop.PropertyType);
-                                    prop.SetValue(game, convertedValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error converting property {jsonPropName}: {ex.Message}");
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error converting property {jsonPropName}: {ex.Message}");
+                                    }
                                 }
                             }
                         }
                     }
+                    return game;
                 }
-                return game;
+                else { return null; }
             }
-            else { return null; }
+            finally
+            {
+                bundleLock.Release();
+            }
+        }
+
+        private async Task PreGenerateBundleImageCacheAsync(string bundlePath, long gameId)
+        {
+            Dictionary<string, string> imageTypeDirectories = new Dictionary<string, string>
+            {
+                { "cover", "cover" },
+                { "screenshots", "screenshots" },
+                { "artworks", "artworks" }
+            };
+
+            foreach (var imageTypeDirectory in imageTypeDirectories)
+            {
+                string sourceRoot = Path.Combine(bundlePath, imageTypeDirectory.Key);
+                if (!Directory.Exists(sourceRoot))
+                {
+                    continue;
+                }
+
+                foreach (string sourceImagePath in Directory.GetFiles(sourceRoot, "*.jpg", SearchOption.AllDirectories))
+                {
+                    string relativeImagePath = Path.GetRelativePath(sourceRoot, sourceImagePath);
+                    foreach (Plugins.PluginManagement.ImageResize.ImageSize size in Enum.GetValues(typeof(Plugins.PluginManagement.ImageResize.ImageSize)))
+                    {
+                        if (size == Plugins.PluginManagement.ImageResize.ImageSize.original)
+                        {
+                            continue;
+                        }
+
+                        var resolution = Common.GetResolution(size);
+                        if (resolution.X == 0 && resolution.Y == 0)
+                        {
+                            continue;
+                        }
+
+                        string targetImagePath = Path.Combine(
+                            Config.LibraryConfiguration.LibraryMetadataDirectory_Cache(),
+                            "images",
+                            SourceType.ToString(),
+                            this.GetType().Name,
+                            gameId.ToString(),
+                            imageTypeDirectory.Value,
+                            size.ToString(),
+                            relativeImagePath
+                        );
+
+                        if (File.Exists(targetImagePath))
+                        {
+                            continue;
+                        }
+
+                        string? targetDir = Path.GetDirectoryName(targetImagePath);
+                        if (!string.IsNullOrEmpty(targetDir) && !Directory.Exists(targetDir))
+                        {
+                            Directory.CreateDirectory(targetDir);
+                        }
+
+                        try
+                        {
+                            using (var image = new ImageMagick.MagickImage(sourceImagePath))
+                            {
+                                image.Resize((uint)resolution.X, (uint)resolution.Y);
+                                await image.WriteAsync(targetImagePath);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.LogKey(Logging.LogType.Warning, "HasheousIGDBProxyProvider", $"Failed to pre-generate image cache variant for '{sourceImagePath}' at size '{size}': {ex.Message}");
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
