@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
@@ -89,6 +90,39 @@ namespace gaseous_server.Tests
             var result = await comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/rate"));
             Assert.Equal(200, result.StatusCode);
             Assert.Equal(2, call);
+        }
+
+        [Fact]
+        public async Task SendRequestAsync_DefaultRateLimitCounters_DoNotPreemptivelyWait()
+        {
+            int originalWindow = GetPrivateStaticIntField("_rateLimitWindow");
+            int originalMaxRequests = GetPrivateStaticIntField("_maxRequestsPerWindow");
+
+            SetPrivateStaticIntField("_rateLimitWindow", 2);
+            SetPrivateStaticIntField("_maxRequestsPerWindow", 1);
+
+            try
+            {
+                var comms = CreateComms((req, ct) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"value\":1}", System.Text.Encoding.UTF8, "application/json")
+                }));
+
+                var first = await comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/no-prewait"));
+                Assert.Equal(200, first.StatusCode);
+
+                var stopwatch = Stopwatch.StartNew();
+                var second = await comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/no-prewait"));
+                stopwatch.Stop();
+
+                Assert.Equal(200, second.StatusCode);
+                Assert.True(stopwatch.Elapsed < TimeSpan.FromMilliseconds(500), $"Unexpected pre-flight wait of {stopwatch.Elapsed.TotalMilliseconds:0.#} ms.");
+            }
+            finally
+            {
+                SetPrivateStaticIntField("_rateLimitWindow", originalWindow);
+                SetPrivateStaticIntField("_maxRequestsPerWindow", originalMaxRequests);
+            }
         }
 
         [Fact]

@@ -316,7 +316,9 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
             // headers.Add("CacheControl", "no-cache");
             // headers.Add("Pragma", "no-cache");
 
-            var response = await comms.SendRequestAsync<string>(HTTPComms.HttpMethod.POST, new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/Lookup/ByHash{sourceList}"), headers, body, contentType: "application/json", returnRawResponse: true);
+            Uri uri = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/Lookup/ByHash{sourceList}");
+
+            var response = await comms.SendRequestAsync<string>(HTTPComms.HttpMethod.POST, uri, headers, body, contentType: "application/json", returnRawResponse: true);
             if (response != null && response.StatusCode == 200)
             {
                 if (!string.IsNullOrWhiteSpace(response.Body) && response.Body != "The provided hash was not found in the signature database.")

@@ -1124,8 +1124,7 @@ namespace gaseous_server.Controllers
 
                     var sendFix = async (gaseous_server.Classes.Roms.GameRomItem rom, gaseous_server.Models.FixMatchModel fixMatchModel) =>
                     {
-                        Uri hasheousBaseUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost.TrimEnd('/')}/");
-                        Uri hasheousUrl = new Uri(hasheousBaseUrl, "api/v1/Submissions/FixMatch");
+                        Uri hasheousUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/Submissions/FixMatch");
                         Dictionary<string, string> headers = new Dictionary<string, string>
                         {
                             { "X-API-Key", Config.MetadataConfiguration.HasheousAPIKey },

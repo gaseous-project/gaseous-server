@@ -166,7 +166,7 @@ namespace gaseous_server.ProcessQueue.Plugins
                             ImportGame.UpdateImportState((Guid)ParentSubTaskItem.Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
                             return;
                         }
-                        ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride);
+                        ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride, this);
 
                         ImportGame.UpdateImportState((Guid)ParentSubTaskItem.Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Rom, ProcessData);
 

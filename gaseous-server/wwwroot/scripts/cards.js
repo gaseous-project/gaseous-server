@@ -3593,7 +3593,7 @@ class SettingsCard {
                             let subRowData = [
                                 subStateIcon,
                                 subTask.taskName,
-                                subTask.currentStateProgress || '',
+                                subTask.currentState || subTask.currentStateProgress || '',
                                 subTask.currentStateProgress ? `<progress value="${subTask.currentStateProgress.split(" of ")[0]}" max="${subTask.currentStateProgress.split(" of ")[1]}">${subTask.currentStateProgress}</progress>` : '<progress value="0" max="100"></progress>',
                                 subTaskLogLink
                             ];

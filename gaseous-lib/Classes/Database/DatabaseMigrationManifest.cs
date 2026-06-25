@@ -135,11 +135,16 @@ namespace gaseous_server.Classes
                 // --- 1040: Games_Roms.DateHashed column ---
                 new() { SchemaVersion = 1040, CheckName = "Games_Roms.DateHashed column exists",
                         Table = "Games_Roms", Column = new() { Name = "DateHashed", TypeFamily = "datetime" } },
+
                 // --- 1041: MetadataMap.SignatureGameNameThe column length becomes 256 and PlatformMap.AdditionalFiles column is created as longtext ---
                 new() { SchemaVersion = 1041, CheckName = "MetadataMap.SignatureGameNameThe is varchar(256)",
                         Table = "MetadataMap", Column = new() { Name = "SignatureGameNameThe", TypeFamily = "varchar" } },
                 new() { SchemaVersion = 1041, CheckName = "PlatformMap.AdditionalFiles column exists and is longtext",
-                        Table = "PlatformMap", Column = new() { Name = "AdditionalFiles", TypeFamily = "longtext" } }
+                        Table = "PlatformMap", Column = new() { Name = "AdditionalFiles", TypeFamily = "longtext" } },
+
+                // --- 1042: Games_Roms.OriginalFileName column added ---
+                new() { SchemaVersion = 1042, CheckName = "Games_Roms.OriginalFileName column exists",
+                        Table = "Games_Roms", Column = new() { Name = "OriginalFileName", TypeFamily = "varchar" } },
             };
         }
 

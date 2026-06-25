@@ -155,7 +155,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                     itemType = itemTypeCorrections[itemType.ToLower()];
                 }
 
-                Uri proxyUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/IGDB/{itemType}?Id={id}");
+                Uri proxyUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/IGDB/{itemType}?Id={id}");
                 Dictionary<string, string> headers = new Dictionary<string, string>
                 {
                     { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
@@ -294,7 +294,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                 return await File.ReadAllBytesAsync(localCachedImagePathFile);
             }
             // image not in cache - download from Hasheous Proxy
-            Uri imageUri = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/IGDB/Image/{normalizedImageIdUri}.jpg");
+            Uri imageUri = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/IGDB/Image/{normalizedImageIdUri}.jpg");
             if (!Directory.Exists(localCachedImagePath))
             {
                 Directory.CreateDirectory(localCachedImagePath);
@@ -380,7 +380,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             if (forceDownloadBundle)
             {
                 // download the bundle via Hasheous Proxy
-                Uri bundleUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/Bundles/IGDB/{id}.bundle");
+                Uri bundleUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/Bundles/IGDB/{id}.bundle");
                 string downloadDirectory = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
                 string downloadedBundlePath = Path.Combine(downloadDirectory, $"{id}.bundle.zip");
                 if (Directory.Exists(downloadDirectory) == true)

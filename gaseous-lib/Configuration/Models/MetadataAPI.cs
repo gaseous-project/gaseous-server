@@ -56,7 +56,7 @@ namespace gaseous_server.Classes.Configuration.Models
                 }
                 else
                 {
-                    return "https://hasheous.org/";
+                    return "https://hasheous.org";
                 }
             }
         }
@@ -72,6 +72,22 @@ namespace gaseous_server.Classes.Configuration.Models
         [JsonIgnore]
         public string HasheousClientAPIKey = _HasheousClientAPIKey;
 
-        public string HasheousHost = _HasheousHost;
+        private string _HasheousHostValue = _HasheousHost;
+        public string HasheousHost
+        {
+            get
+            {
+                // strip trailing slash if exists
+                if (_HasheousHostValue.EndsWith("/"))
+                {
+                    return _HasheousHostValue.Substring(0, _HasheousHostValue.Length - 1);
+                }
+                return _HasheousHostValue;
+            }
+            set
+            {
+                _HasheousHostValue = value;
+            }
+        }
     }
 }
