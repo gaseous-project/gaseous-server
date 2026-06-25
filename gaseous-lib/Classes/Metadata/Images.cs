@@ -568,7 +568,7 @@ namespace gaseous_server.Classes.Metadata
             }
             catch (Exception ex)
             {
-                Logging.LogKey(Logging.LogType.Warning, "ImageHandling", $"Failed to get image for MetadataMapId {MetadataMapId}, Source {MetadataSource}, ImageType {imageType}, ImageId {ImageId}: {ex.Message}");
+                Logging.LogKey(Logging.LogType.Warning, "ImageHandling", $"Failed to get image for MetadataMapId {MetadataMapId}, Source {MetadataSource}, ImageType {imageType}, ImageId {ImageId}: {ex.Message}", exceptionValue: ex);
                 return null;
             }
         }

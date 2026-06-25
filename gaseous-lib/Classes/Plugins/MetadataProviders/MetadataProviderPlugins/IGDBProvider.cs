@@ -474,7 +474,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                         if (proxyResult != null)
                         {
                             // save to storage
-                            _ = Storage.StoreCacheValue<T>(proxyResult);
+                            await Storage.StoreCacheValue<T>(proxyResult);
 
                             return proxyResult;
                         }
