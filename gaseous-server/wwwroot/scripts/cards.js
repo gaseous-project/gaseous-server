@@ -2134,8 +2134,8 @@ class GameCardRomList {
             }
         }).then(response => response.json());
         let platformMap = [];
-        if (platformMapData && platformMapData.result.length > 0) {
-            platformMapData.result.forEach(element => {
+        if (platformMapData && platformMapData.length > 0) {
+            platformMapData.forEach(element => {
                 if (element && element.id && element.name) {
                     let item = {
                         id: element.id,

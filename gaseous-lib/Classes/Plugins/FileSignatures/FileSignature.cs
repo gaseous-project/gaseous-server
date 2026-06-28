@@ -337,18 +337,30 @@ namespace gaseous_server.Classes
                         return new List<ArchiveData>();
                     }
 
-                    if (ArchiveContents.Any(a => new string[] { ".iso", ".bin", ".cue", ".img", ".ima" }.Contains(Path.GetExtension(a.FileName).ToLower())))
+                    var imagesInArchive = ArchiveContents.Any(a => new string[] { ".iso", ".bin", ".cue", ".img", ".ima" }.Contains(Path.GetExtension(a.FileName).ToLower()));
+
+                    if (imagesInArchive)
                     {
                         // if archive contains .cue, then we need to look for a .bin file and use that as the signature match candidate instead of the .cue file, as .cue files often contain metadata and may not be the primary signature match for the overall archive. if not, fall back to looking for .iso files as the primary signature match candidate, as these are more likely to be the primary signature match for the overall archive than other file types based on common usage in game ROMs and emulation.
-                        if (ArchiveContents.Any(a => Path.GetExtension(a.FileName).ToLower() == ".cue"))
+                        var cueFilesInArchive = ArchiveContents.Any(a => Path.GetExtension(a.FileName).ToLower() == ".cue");
+                        if (cueFilesInArchive)
                         {
-                            return ArchiveContents.Where(a => Path.GetExtension(a.FileName).ToLower() == ".bin").OrderByDescending(a => a.Score).Take(1).ToList();
+                            var binFilesInArchive = ArchiveContents.Where(a => Path.GetExtension(a.FileName).ToLower() == ".bin").OrderByDescending(a => a.Score).Take(1).ToList();
+                            if (binFilesInArchive.Count > 0)
+                            {
+                                return binFilesInArchive;
+                            }
                         }
 
-                        return ArchiveContents.Where(a => new string[] { ".iso", ".img", ".ima" }.Contains(Path.GetExtension(a.FileName).ToLower())).OrderByDescending(a => a.Score).Take(1).ToList();
+                        var isoFilesInArchive = ArchiveContents.Where(a => new string[] { ".iso", ".img", ".ima" }.Contains(Path.GetExtension(a.FileName).ToLower())).OrderByDescending(a => a.Score).Take(1).ToList();
+                        if (isoFilesInArchive.Count > 0)
+                        {
+                            return isoFilesInArchive;
+                        }
                     }
 
-                    return ArchiveContents.OrderByDescending(a => a.Score).Take(5).ToList();
+                    var topCandidates = ArchiveContents.OrderByDescending(a => a.Score).Take(5).ToList();
+                    return topCandidates;
                 }
             }
         }
