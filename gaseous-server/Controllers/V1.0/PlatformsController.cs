@@ -28,7 +28,7 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(typeof(List<Platform>), StatusCodes.Status200OK)]
-        public async Task<ActionResult> Platform()
+        public async Task<ActionResult<List<Platform>>> Platform()
         {
             return Ok(await GetPlatforms());
         }
