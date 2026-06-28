@@ -64,6 +64,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                             var body = new List<HasheousClient.Models.HashLookupModel>();
                             if (hash.ArchiveContents == null || hash.ArchiveContents.Count == 0)
                             {
+                                Console.WriteLine($"Searching using single file hash: {hash.FileName}");
                                 body.Add(new HasheousClient.Models.HashLookupModel
                                 {
                                     MD5 = hash.Hash.md5hash,
@@ -76,6 +77,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                             {
                                 foreach (ArchiveData archiveData in hash.MatchCandidates)
                                 {
+                                    Console.WriteLine($"Searching using scored archive file hash: {archiveData.FileName}");
                                     body.Add(new HasheousClient.Models.HashLookupModel
                                     {
                                         MD5 = archiveData.Hash.md5hash,
@@ -93,6 +95,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                             if (HasheousResult == null)
                             {
                                 // fall back to full archive search
+                                Console.WriteLine($"Searching using full archive hash: {hash.FileName}");
                                 body.Clear();
                                 foreach (ArchiveData archiveData in hash.ArchiveContents)
                                 {
