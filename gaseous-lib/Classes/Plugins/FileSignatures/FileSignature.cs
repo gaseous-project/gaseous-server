@@ -368,8 +368,6 @@ namespace gaseous_server.Classes
 
                     var topCandidatesBySize = ArchiveContents.OrderByDescending(a => a.Size).Take(MaxMatchCandidates).ToList();
 
-                    var topCandidatesByScore = ArchiveContents.OrderByDescending(a => a.Score).Take(MaxMatchCandidates).ToList();
-
                     var topCandidates = topCandidatesBySize;
 
                     return topCandidates;
@@ -423,11 +421,6 @@ namespace gaseous_server.Classes
                     if (excludedFileNames.Contains(FileName.ToLower()) || excludedFileNames.Contains(FilePath.ToLower()))
                     {
                         return 0;
-                    }
-
-                    if (FileName == "DOOMLIC.TXT")
-                    {
-                        var debug = 1;
                     }
 
                     if (
