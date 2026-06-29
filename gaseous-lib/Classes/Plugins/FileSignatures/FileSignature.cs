@@ -324,7 +324,14 @@ namespace gaseous_server.Classes
             public List<ArchiveData> ArchiveContents { get; set; } = new List<ArchiveData>();
 
             /// <summary>
-            /// Gets the top 5 candidate files within the archive that are most likely to be the primary signature match for the overall archive
+            /// Gets the maximum number of candidate files within the archive to consider when determining the primary signature match for the overall archive. This value is used to limit the number of files that are analyzed for signature matching, as analyzing too many files can be time-consuming and may not yield additional useful information.
+            /// </summary>
+            [System.Text.Json.Serialization.JsonIgnore]
+            [Newtonsoft.Json.JsonIgnore]
+            public readonly int MaxMatchCandidates = 3;
+
+            /// <summary>
+            /// Gets the top candidate files within the archive that are most likely to be the primary signature match for the overall archive
             /// </summary>
             [System.Text.Json.Serialization.JsonIgnore]
             [Newtonsoft.Json.JsonIgnore]
@@ -359,7 +366,12 @@ namespace gaseous_server.Classes
                         }
                     }
 
-                    var topCandidates = ArchiveContents.OrderByDescending(a => a.Score).Take(5).ToList();
+                    var topCandidatesBySize = ArchiveContents.OrderByDescending(a => a.Size).Take(MaxMatchCandidates).ToList();
+
+                    var topCandidatesByScore = ArchiveContents.OrderByDescending(a => a.Score).Take(MaxMatchCandidates).ToList();
+
+                    var topCandidates = topCandidatesBySize;
+
                     return topCandidates;
                 }
             }
@@ -373,6 +385,7 @@ namespace gaseous_server.Classes
             private readonly string[] superLikelyExtensions = new string[] { ".exe", ".com" };
             private readonly string[] likelyPrimaryExtensions = new string[] { ".smc", ".sfc", ".nes", ".gb", ".gba", ".bin", ".cue", ".iso", ".img", ".ima", ".rom", ".zip", ".7z", ".rar", ".exe", ".dll" };
             private readonly string[] unlikelyPrimaryExtensions = new string[] { ".txt", ".pdf", ".docx", ".xlsx", ".pptx", ".nfo", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".mp3", ".ogg", ".wav", ".flac", ".aac" };
+            private readonly string[] unlikelyFileNameParts = new string[] { "readme", "license", "changelog", "setup", "install", "uninstall", "autorun", "thumbs", "desktop", ".ds_store", "intro", "demo" };
             private readonly string[] excludedFileNames = new string[] { "readme.txt", "readme.md", "license.txt", "license.md", "changelog.txt", "changelog.md", "setup.exe", "install.exe", "uninstall.exe", "autorun.exe", "thumbs.db", "desktop.ini", ".ds_store", "intro.exe", "demo.exe" };
 
             /// <summary>
@@ -412,6 +425,11 @@ namespace gaseous_server.Classes
                         return 0;
                     }
 
+                    if (FileName == "DOOMLIC.TXT")
+                    {
+                        var debug = 1;
+                    }
+
                     if (
                         superLikelyExtensions.Contains(Path.GetExtension(FileName).ToLower()) ||
                         superLikelyExtensions.Contains(Path.GetExtension(FilePath).ToLower())
@@ -419,7 +437,7 @@ namespace gaseous_server.Classes
                     {
                         score += 200;
                     }
-                    if (
+                    else if (
                         likelyPrimaryExtensions.Contains(Path.GetExtension(FileName).ToLower()) ||
                         likelyPrimaryExtensions.Contains(Path.GetExtension(FilePath).ToLower())
                         )
@@ -431,7 +449,12 @@ namespace gaseous_server.Classes
                         unlikelyPrimaryExtensions.Contains(Path.GetExtension(FilePath).ToLower())
                         )
                     {
-                        score += 50;
+                        score -= 100;
+                    }
+
+                    if (unlikelyFileNameParts.Any(part => FileName.ToLower().Contains(part)) || unlikelyFileNameParts.Any(part => FilePath.ToLower().Contains(part)))
+                    {
+                        score -= 300;
                     }
                     return score;
                 }

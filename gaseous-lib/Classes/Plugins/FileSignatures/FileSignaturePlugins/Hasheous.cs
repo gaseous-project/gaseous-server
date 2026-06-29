@@ -92,6 +92,39 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
 
                             HasheousResult = await SearchHasheous(sourceList, body);
 
+                            // if no result, try removing an item from the match candidates list and searching again
+                            // build combinations of match candidates to search for, ensuring a minimum of 2 candidates are included in each search
+                            Console.WriteLine($"Dropping match candidates and searching again if no result found.");
+                            if (HasheousResult == null && hash.MatchCandidates.Count > 2)
+                            {
+                                for (int i = 0; i < hash.MatchCandidates.Count; i++)
+                                {
+                                    var reducedCandidates = hash.MatchCandidates.Where((_, index) => index != i).ToList();
+                                    if (reducedCandidates.Count >= 2)
+                                    {
+                                        body.Clear();
+                                        foreach (ArchiveData archiveData in reducedCandidates)
+                                        {
+                                            Console.WriteLine($"Searching using reduced scored archive file hash: {archiveData.FileName}");
+                                            body.Add(new HasheousClient.Models.HashLookupModel
+                                            {
+                                                MD5 = archiveData.Hash.md5hash,
+                                                SHA1 = archiveData.Hash.sha1hash,
+                                                SHA256 = archiveData.Hash.sha256hash,
+                                                CRC = archiveData.Hash.crc32hash
+                                            });
+                                        }
+
+                                        HasheousResult = await SearchHasheous(sourceList, body);
+
+                                        if (HasheousResult != null)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
                             if (HasheousResult == null)
                             {
                                 // fall back to full archive search
