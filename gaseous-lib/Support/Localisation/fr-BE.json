@@ -45,5 +45,7 @@
         "accountmodal.email_rule_valid_address": "L'e-mail est une adresse valide",
         "accountmodal.email_rule_unique": "L'e-mail est unique"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Vérification des noms de signature nuls"
+    }
 }

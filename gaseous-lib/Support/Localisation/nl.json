@@ -1038,6 +1038,7 @@
         "mediagroup.copying_rom": "ROM kopiëren: {0}",
         "mediagroup.compressing_media_group": "Mediagroep comprimeren",
         "mediagroup.cleaning_up": "Opruimen",
-        "mediagroup.media_group_building_has_failed": "Mediagroep bouwen mislukt"
+        "mediagroup.media_group_building_has_failed": "Mediagroep bouwen mislukt",
+        "maintenance.checking_for_null_signature_names": "Controleren op null-handtekeningnamen"
     }
 }

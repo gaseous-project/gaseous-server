@@ -16,5 +16,7 @@
         "card.content.table.size": "Groesse",
         "rominfo.zip.table.header.size": "Groesse"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Überprüfen auf null Signaturnamen"
+    }
 }

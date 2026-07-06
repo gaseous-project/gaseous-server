@@ -1223,6 +1223,52 @@ SET
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			db.ExecuteNonQuery(sql);
 		}
+
+		/// <summary>
+		/// Ensures that all metadata maps in the database have a non-null and non-empty value for the `SignatureGameNameThe` column. This method checks for any metadata maps where the `SignatureGameNameThe` is either NULL or an empty string and can be used to identify and correct missing or incomplete metadata entries.
+		/// </summary>
+		public async Task EnsureAllMetadataMapsHaveNameThe()
+		{
+			string sql = @"SELECT * FROM MetadataMap WHERE (`SignatureGameName` IS NOT NULL AND `SignatureGameName` <> '') AND (`SignatureGameNameThe` IS NULL OR `SignatureGameNameThe` = '');";
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+			DataTable dt = await db.ExecuteCMDAsync(sql);
+
+			foreach (DataRow row in dt.Rows)
+			{
+				long metadataMapId = (long)row["Id"];
+				if (row["SignatureGameName"] == DBNull.Value || string.IsNullOrEmpty(row["SignatureGameName"].ToString()))
+				{
+					continue; // Skip if SignatureGameName is null or empty
+				}
+				string standardName = (string)row["SignatureGameName"];
+
+				string nameThe = standardName;
+				if (!string.IsNullOrEmpty(standardName))
+				{
+					// Check if the standard name starts with "The " (case-insensitive)
+					if (standardName.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+					{
+						// Move "The" to the end of the name
+						nameThe = standardName.Substring(4).Trim() + ", The";
+					}
+					else
+					{
+						// otherwise, do nothing
+						nameThe = standardName;
+					}
+
+					// Update the database with the new value for SignatureGameNameThe
+					string updateSql = @"UPDATE MetadataMap SET `SignatureGameNameThe` = @nameThe WHERE `Id` = @metadataMapId;";
+					Dictionary<string, object> dbDict = new Dictionary<string, object>()
+					{
+						{ "@nameThe", nameThe },
+						{ "@metadataMapId", metadataMapId }
+					};
+					await db.ExecuteCMDAsync(updateSql, dbDict);
+				}
+			}
+		}
 	}
 }
 

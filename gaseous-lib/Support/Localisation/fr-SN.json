@@ -17,5 +17,7 @@
         "banner.upload.alt": "Importer",
         "generic.upload_complete": "Importation terminée"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Vérification des noms de signature nuls"
+    }
 }

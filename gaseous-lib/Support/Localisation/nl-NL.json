@@ -12,5 +12,7 @@
     "strings": {
         "home.favourites": "Favorieten"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Controleren op null-handtekeningnamen"
+    }
 }

@@ -26,5 +26,7 @@
         "card.management.platform_mapping_reset_message": "Todos os mapeamentos de plataforma foram redefinidos para os valores padrão.",
         "generic.download": "Baixar"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Verificando nomes de assinatura nulos"
+    }
 }

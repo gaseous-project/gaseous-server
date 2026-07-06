@@ -42,6 +42,10 @@ namespace gaseous_server.Classes
             MetadataManagement metadataGame = new MetadataManagement(this);
             metadataGame.UpdateRomCounts();
 
+            // check for any metadata maps that have null signature names
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.checking_for_null_signature_names");
+            await metadataGame.EnsureAllMetadataMapsHaveNameThe();
+
             // run log maintenance
             Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.running_log_maintenance");
             await Logging.RunMaintenance();
