@@ -12,5 +12,7 @@
         "filtering.settings.favourite": "Favourite",
         "about.old_school_emulation_center": "The Old School Emulation Centre"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Checking for null signature names"
+    }
 }

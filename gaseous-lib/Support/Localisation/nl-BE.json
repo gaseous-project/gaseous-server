@@ -13,5 +13,7 @@
         "home.favourites": "Favorieten",
         "accountmodal.quip_label": "Onderschrift"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Controleren op null-handtekeningnamen"
+    }
 }

@@ -1038,6 +1038,7 @@
         "database.reading_setting": "Lecture du paramètre '{0}'",
         "database.failed_reading_setting": "Échec de lecture du paramètre {0}",
         "database.storing_setting_to_value": "Stockage du paramètre '{0}' à la valeur : '{1}'",
-        "database.failed_storing_setting": "Échec du stockage du paramètre {0}"
+        "database.failed_storing_setting": "Échec du stockage du paramètre {0}",
+        "maintenance.checking_for_null_signature_names": "Vérification des noms de signature nuls"
     }
 }

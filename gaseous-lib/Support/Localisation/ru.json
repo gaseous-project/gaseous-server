@@ -215,8 +215,6 @@
         "card.game.data_provided_by": "Данные предоставлены {0}.",
         "card.game.source_link_label": "Источник",
         "card.game.logo_provided_by": "Логотип предоставлен {0}",
-        "card.system.library_statistics.platforms_label": "Платформы",
-        "card.system.library_statistics.roms_label": "ROM: {0}",
         "card.screenshots.my_content_tab": "Мой контент",
         "about.home_page": "Домашняя страница",
         "about.bugs_and_feature_requests": "Ошибки и запросы функций",
@@ -1046,6 +1044,7 @@
         "mediagroup.copying_rom": "Копирование ROM: {0}",
         "mediagroup.compressing_media_group": "Сжатие медиа-группы",
         "mediagroup.cleaning_up": "Очистка",
-        "mediagroup.media_group_building_has_failed": "Сборка медиа-группы не удалась"
+        "mediagroup.media_group_building_has_failed": "Сборка медиа-группы не удалась",
+        "maintenance.checking_for_null_signature_names": "Проверка нулевых названий сигнатур"
     }
 }

@@ -46,5 +46,7 @@
         "loginpage.email_or_username_placeholder": "Courriel ou nom d'utilisateur",
         "screenshots.upload_date.unknown": "Date de téléversement inconnue"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Vérification des noms de signature nuls"
+    }
 }

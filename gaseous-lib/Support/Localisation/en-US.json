@@ -6,5 +6,7 @@
     "direction": "ltr",
     "type": "Overlay",
     "strings": {},
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Checking for null signature names"
+    }
 }

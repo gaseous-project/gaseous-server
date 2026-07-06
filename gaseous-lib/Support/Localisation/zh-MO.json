@@ -26,5 +26,7 @@
         "banner.settings": "設定",
         "banner.settings.alt": "設定"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "正在检查空值签名名称"
+    }
 }

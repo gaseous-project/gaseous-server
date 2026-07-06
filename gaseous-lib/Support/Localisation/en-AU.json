@@ -20,5 +20,7 @@
         "organiselibrary.starting_default_library_organisation": "Starting default library organisation",
         "organiselibrary.finished_default_library_organisation": "Finished default library organisation"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Checking for null signature names"
+    }
 }

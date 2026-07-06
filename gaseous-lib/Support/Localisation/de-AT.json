@@ -12,5 +12,7 @@
     "strings": {
         "homepage.go_to_your_library_button": "Zur Bibliothek gehen"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Überprüfen auf null Signaturnamen"
+    }
 }

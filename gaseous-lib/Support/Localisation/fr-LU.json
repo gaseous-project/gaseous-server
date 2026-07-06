@@ -19,5 +19,7 @@
         "organiselibrary.starting_default_library_organisation": "Démarrage de l'organisation par défaut de la bibliothèque",
         "organiselibrary.finished_default_library_organisation": "Organisation par défaut de la bibliothèque terminée"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Vérification des noms de signature nuls"
+    }
 }

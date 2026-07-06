@@ -9,5 +9,7 @@
     "direction": "ltr",
     "type": "Overlay",
     "strings": {},
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "正在检查空值签名名称"
+    }
 }

@@ -10,5 +10,7 @@
     "direction": "ltr",
     "type": "Overlay",
     "strings": {},
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "Verificando nomes de assinatura nulos"
+    }
 }

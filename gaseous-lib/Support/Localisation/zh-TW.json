@@ -29,5 +29,7 @@
         "accountmodal.password_rule_at_least_one_number": "至少一個數字",
         "accountmodal.password_rule_at_least_one_special_character": "至少一個特殊字元。"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "maintenance.checking_for_null_signature_names": "正在检查空值签名名称"
+    }
 }
