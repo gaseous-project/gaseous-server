@@ -1237,6 +1237,10 @@ SET
 			foreach (DataRow row in dt.Rows)
 			{
 				long metadataMapId = (long)row["Id"];
+				if (row["SignatureGameName"] == DBNull.Value || string.IsNullOrEmpty(row["SignatureGameName"].ToString()))
+				{
+					continue; // Skip if SignatureGameName is null or empty
+				}
 				string standardName = (string)row["SignatureGameName"];
 
 				string nameThe = standardName;
