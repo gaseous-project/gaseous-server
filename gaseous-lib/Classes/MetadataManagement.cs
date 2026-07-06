@@ -1229,7 +1229,7 @@ SET
 		/// </summary>
 		public async Task EnsureAllMetadataMapsHaveNameThe()
 		{
-			string sql = @"SELECT * FROM MetadataMap WHERE `SignatureGameNameThe` IS NULL OR `SignatureGameNameThe` = '';";
+			string sql = @"SELECT * FROM MetadataMap WHERE (`SignatureGameName` IS NOT NULL AND `SignatureGameName` <> '') AND (`SignatureGameNameThe` IS NULL OR `SignatureGameNameThe` = '');";
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
 			DataTable dt = await db.ExecuteCMDAsync(sql);
