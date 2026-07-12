@@ -37,7 +37,7 @@ namespace gaseous_server.Classes.Metadata
             // fetch all platforms
             if (hasheousPlatforms.Count == 0)
             {
-                var response = await comms.SendRequestAsync<HasheousClient.Models.DataObjectsList>(HTTPComms.HttpMethod.GET, new Uri("https://hasheous.org/api/v1/Lookup/Platforms?PageSize=50&PageNumber=1"), headers);
+                var response = await comms.SendRequestAsync<HasheousClient.Models.DataObjectsList>(HTTPComms.HttpMethod.GET, new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/Lookup/Platforms?PageSize=50&PageNumber=1"), headers);
                 if (response != null && response.StatusCode == 200)
                 {
                     if (response.Body != null)
@@ -48,7 +48,7 @@ namespace gaseous_server.Classes.Metadata
                         {
                             for (int i = 2; i <= response.Body.TotalPages; i++)
                             {
-                                var pagedResponse = await comms.SendRequestAsync<HasheousClient.Models.DataObjectsList>(HTTPComms.HttpMethod.GET, new Uri($"https://hasheous.org/api/v1/Lookup/Platforms?PageSize=50&PageNumber={i}"), headers);
+                                var pagedResponse = await comms.SendRequestAsync<HasheousClient.Models.DataObjectsList>(HTTPComms.HttpMethod.GET, new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/Lookup/Platforms?PageSize=50&PageNumber={i}"), headers);
                                 if (pagedResponse != null && pagedResponse.StatusCode == 200 && pagedResponse.Body != null)
                                 {
                                     hasheousPlatforms.AddRange(pagedResponse.Body.Objects);
