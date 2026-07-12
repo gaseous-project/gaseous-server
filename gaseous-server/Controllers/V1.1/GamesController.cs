@@ -921,7 +921,7 @@ namespace gaseous_server.Controllers.v1_1
 
             string sql = @"
                 SELECT 
-    `MetadataMapBridge`.`MetadataSourceId` AS `Id`,
+    NULLIF(`MetadataMapBridge`.`MetadataSourceId`, -1) AS `Id`,
     `MetadataMap`.`Id` AS `MetadataMapId`,
     `MetadataMapBridge`.`MetadataSourceType` AS `GameIdType`,
     `MetadataMap`.`SignatureGameName`,
@@ -1035,7 +1035,7 @@ FROM
         AND `Favourites`.`UserId` = @userid
         LEFT JOIN
     `Metadata_Game` AS `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
-        AND `MetadataMapBridge`.`MetadataSourceId` = `Game`.`Id`
+        AND NULLIF(`MetadataMapBridge`.`MetadataSourceId`, -1) = `Game`.`Id`
         LEFT JOIN
     `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game`
         AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
@@ -1049,7 +1049,7 @@ FROM
             AND `r`.`Identifier` = @lang
     ) AS `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
         AND `Game`.`SourceId` = `LocalizedNames`.`SourceId`
-" + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceType`, `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
+" + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceType`, NULLIF(`MetadataMapBridge`.`MetadataSourceId`, -1) " + havingClause + " " + orderByClause;
 
             string? userLocale = user.UserPreferences?.Find(x => x.Setting == "User.Locale")?.Value;
             if (userLocale != null)

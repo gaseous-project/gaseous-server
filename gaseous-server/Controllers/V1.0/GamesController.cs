@@ -1007,7 +1007,7 @@ namespace gaseous_server.Controllers
                 filteredMetadataMap.MetadataMapItems = metadataMap.MetadataMapItems;
 
                 // further filter out metadataMapItems where sourceId = 0
-                filteredMetadataMap.MetadataMapItems = filteredMetadataMap.MetadataMapItems.Where(x => x.SourceId != 0).ToList();
+                filteredMetadataMap.MetadataMapItems = filteredMetadataMap.MetadataMapItems.Where(x => x.SourceId.HasValue && x.SourceId.Value != 0).ToList();
 
                 metadataMap.MetadataMapItems = filteredMetadataMap.MetadataMapItems;
 
