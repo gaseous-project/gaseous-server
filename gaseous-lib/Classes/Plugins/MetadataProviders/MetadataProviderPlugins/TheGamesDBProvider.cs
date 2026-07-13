@@ -316,7 +316,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 Directory.CreateDirectory(Path.GetDirectoryName(directImagePath));
             }
 
-            Uri imageUri = new Uri($"https://hasheous.org/api/v1/MetadataProxy/TheGamesDB/Images/original/{string.Join("/", relativeSegments)}");
+            Uri imageUri = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/TheGamesDB/Images/original/{string.Join("/", relativeSegments)}");
             Dictionary<string, string> headers = new Dictionary<string, string>
             {
                 { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }

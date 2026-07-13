@@ -43,6 +43,17 @@ namespace gaseous_server.Classes
 			cloner: CloneForCache
 		);
 
+		private static long? ReadMetadataSourceId(object value)
+		{
+			if (value == DBNull.Value)
+			{
+				return null;
+			}
+
+			long sourceId = (long)value;
+			return sourceId == -1 ? null : sourceId;
+		}
+
 		/// <summary>
 		/// Custom clone delegate used by the in-memory cache to snapshot supported object types.
 		/// Ensures internal collections are copied so callers cannot mutate the cached instance.
@@ -260,21 +271,26 @@ namespace gaseous_server.Classes
 				{ "@automaticMetadataSourceId", AutomaticMetadataSourceId ?? (object)DBNull.Value }
 			};
 
+			List<string> setClauses = new List<string>();
 			List<string> whereClauses = new List<string>();
 			if (sourceId != null)
 			{
-				whereClauses.Add("MetadataSourceId = @sourceId");
+				setClauses.Add("MetadataSourceId = @sourceId");
+				whereClauses.Add("NULLIF(MetadataSourceId, -1) = @sourceId");
 			}
 			if (IsManual != null)
 			{
+				setClauses.Add("IsManual = @isManual");
 				whereClauses.Add("IsManual = @isManual");
 			}
 			if (AutomaticMetadataSourceId != null)
 			{
+				setClauses.Add("AutomaticMetadataSourceId = @automaticMetadataSourceId");
 				whereClauses.Add("AutomaticMetadataSourceId = @automaticMetadataSourceId");
 			}
 
-			string whereClause = string.Join(", ", whereClauses);
+			string setClause = string.Join(", ", setClauses);
+			string whereClause = string.Join(" AND ", whereClauses);
 
 			if (preferred == true)
 			{
@@ -293,7 +309,7 @@ namespace gaseous_server.Classes
 			}
 
 			// update the metadata map item
-			sql = $"UPDATE MetadataMapBridge SET {whereClause} WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
+			sql = $"UPDATE MetadataMapBridge SET {setClause} WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
 			db.ExecuteCMD(sql, dbDict);
 
 			// clear the cache for this metadata map if present (covers non-preferred updates)
@@ -408,7 +424,7 @@ namespace gaseous_server.Classes
 					MetadataMap.MetadataMapItem metadataMapItem = new MetadataMap.MetadataMapItem()
 					{
 						SourceType = (FileSignature.MetadataSources)dr["MetadataSourceType"],
-						SourceId = (long)dr["MetadataSourceId"],
+						SourceId = ReadMetadataSourceId(dr["MetadataSourceId"]),
 						Preferred = (bool)dr["Preferred"],
 						AutomaticMetadataSourceId = dr["AutomaticMetadataSourceId"] == DBNull.Value ? null : (long?)dr["AutomaticMetadataSourceId"],
 						IsManual = (bool)dr["IsManual"]
@@ -550,7 +566,7 @@ namespace gaseous_server.Classes
 
 			string preferredSql = preferred ? "AND Preferred = @preferred" : "";
 
-			sql = "SELECT * FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND MetadataSourceId = @sourceId " + preferredSql + ";";
+			sql = "SELECT * FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND NULLIF(MetadataSourceId, -1) = @sourceId " + preferredSql + ";";
 			dt = db.ExecuteCMD(sql, dbDict);
 
 			if (dt.Rows.Count > 0)
@@ -585,7 +601,7 @@ namespace gaseous_server.Classes
 				{ "@metadataMapId", metadataMapId }
 			};
 
-			sql = "SELECT `M1`.`Id` AS `Id` FROM `view_MetadataMap` `M` JOIN `view_MetadataMap` `M1` ON `M`.`MetadataSourceId` = `M1`.`MetadataSourceId` WHERE `M`.`Id` = @metadataMapId; ";
+			sql = "SELECT `M1`.`Id` AS `Id` FROM `view_MetadataMap` `M` JOIN `view_MetadataMap` `M1` ON NULLIF(`M`.`MetadataSourceId`, -1) = NULLIF(`M1`.`MetadataSourceId`, -1) WHERE `M`.`Id` = @metadataMapId; ";
 			DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			List<long> metadataMapIds = new List<long>();

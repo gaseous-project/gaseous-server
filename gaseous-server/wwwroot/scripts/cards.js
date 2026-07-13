@@ -3561,8 +3561,7 @@ class SettingsCard {
                         subHeaderRow.innerHTML = `
                             <th class="romcell" style="width: 20px;"></th>
                             <th class="romcell" style="width: 20%;">Task Name</th>
-                            <th class="romcell" style="width: 25%;">Progress</th>
-                            <th class="romcell"></th>
+                            <th class="romcell">Progress</th>
                             <th class="romcell" style="width: 20px;"></th>
                         `;
                         subTable.appendChild(subHeaderRow);
@@ -3590,11 +3589,22 @@ class SettingsCard {
                                 });
                             }
 
+                            let progressContent = '';
+                            if (subTask.currentState || subTask.currentStateProgress) {
+                                let progressContentValue = subTask.currentState || subTask.currentStateProgress || '';
+                                let progressBar = subTask.currentStateProgress ? `<progress style="margin-top: 10px; margin-bottom: 5px;" value="${subTask.currentStateProgress.split(" of ")[0]}" max="${subTask.currentStateProgress.split(" of ")[1]}">${subTask.currentStateProgress}</progress>` : '<progress value="0" max="100"></progress>';
+
+                                if (progressContentValue.length > 0) {
+                                    progressContent = `${progressContentValue}<br>${progressBar}`;
+                                } else {
+                                    progressContent = progressBar;
+                                }
+                            }
+
                             let subRowData = [
                                 subStateIcon,
                                 subTask.taskName,
-                                subTask.currentState || subTask.currentStateProgress || '',
-                                subTask.currentStateProgress ? `<progress value="${subTask.currentStateProgress.split(" of ")[0]}" max="${subTask.currentStateProgress.split(" of ")[1]}">${subTask.currentStateProgress}</progress>` : '<progress value="0" max="100"></progress>',
+                                progressContent,
                                 subTaskLogLink
                             ];
 

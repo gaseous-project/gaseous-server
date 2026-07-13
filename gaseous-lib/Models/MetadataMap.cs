@@ -71,7 +71,12 @@ namespace gaseous_server.Models
             /// <summary>
             /// The unique identifier for the source, which may be null if the source type is 'None'.
             /// </summary>
-            public long? SourceId { get; set; }
+            private long? _sourceId;
+            public long? SourceId
+            {
+                get => _sourceId;
+                set => _sourceId = value == -1 ? null : value;
+            }
 
             /// <summary>
             /// The unique identifier for the data source as provided by the automatic metadata fetcher, if applicable. Is used to restore the source if the user has marked it as not manual. If null, and the user has marked the source as not manual, continue to use the SourceId as-is, and wait for the automatic fetcher to update it.

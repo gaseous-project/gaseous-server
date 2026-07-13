@@ -145,6 +145,10 @@ namespace gaseous_server.Classes
                 // --- 1042: Games_Roms.OriginalFileName column added ---
                 new() { SchemaVersion = 1042, CheckName = "Games_Roms.OriginalFileName column exists",
                         Table = "Games_Roms", Column = new() { Name = "OriginalFileName", TypeFamily = "varchar" } },
+
+                // --- 1043: MetadataMapBridge use -1 as null sentinel for MetadataSourceId ---
+                new() { SchemaVersion = 1043, CheckName = "MetadataMapBridge.MetadataSourceId uses -1 as null sentinel",
+                        Table = "MetadataMapBridge", Column = new() { Name = "MetadataSourceId", TypeFamily = "bigint" } }
             };
         }
 

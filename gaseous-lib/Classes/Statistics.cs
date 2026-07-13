@@ -84,8 +84,12 @@ namespace gaseous_server.Classes
             Dictionary<string, object> dbDict;
 
             // get all the metadatamapids with the same game mapping
-            sql = "SELECT MetadataSourceId FROM view_MetadataMap WHERE Id = @gameid;";
+            sql = "SELECT NULLIF(MetadataSourceId, -1) AS MetadataSourceId FROM view_MetadataMap WHERE Id = @gameid;";
             DataTable dtGameIds = db.ExecuteCMD(sql, new Dictionary<string, object> { { "gameid", GameId } });
+            if (dtGameIds.Rows.Count == 0 || dtGameIds.Rows[0]["MetadataSourceId"] == DBNull.Value)
+            {
+                return null;
+            }
 
             sql = "SELECT Id FROM view_MetadataMap WHERE MetadataSourceId = @metadatasourceid;";
             dtGameIds = db.ExecuteCMD(sql, new Dictionary<string, object> { { "metadatasourceid", dtGameIds.Rows[0]["MetadataSourceId"] } });

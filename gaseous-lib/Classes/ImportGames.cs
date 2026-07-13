@@ -494,7 +494,7 @@ namespace gaseous_server.Classes
                         // source exists in the map but not in the signature - remove it from the map if it's not marked as manual, otherwise set the automatic source id to null
                         if (mapSource.IsManual == false)
                         {
-                            sql = "UPDATE MetadataMapBridge SET MetadataSourceId=null, AutomaticMetadataSourceId=null, Preferred=0 WHERE ParentMapId=@id AND MetadataSourceType=@source;";
+                            sql = "UPDATE MetadataMapBridge SET MetadataSourceId=-1, AutomaticMetadataSourceId=null, Preferred=0 WHERE ParentMapId=@id AND MetadataSourceType=@source;";
                         }
                         else
                         {

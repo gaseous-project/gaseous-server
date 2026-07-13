@@ -837,24 +837,35 @@ namespace gaseous_server.ProcessQueue
                         SubTask? nextTask = GetNextNeverStartedSubTask(BackgroundThreads.Keys.ToHashSet());
                         if (nextTask != null)
                         {
-                            Thread thread = new Thread(() => nextTask.Execute().GetAwaiter().GetResult());
-                            thread.Name = nextTask.TaskName;
-                            thread.Start();
-                            BackgroundThreads[nextTask.CorrelationId] = new RunningSubTask
-                            {
-                                SubTask = nextTask,
-                                Thread = thread
-                            };
+                            try
 
-                            subTaskProgressCount += 1;
-                            CurrentState = "Running " + nextTask.TaskName;
-                            if (nextTask.RemoveWhenStopped == true)
                             {
-                                CurrentStateProgress = subTaskProgressCount.ToString();
+                                Thread thread = new Thread(() => nextTask.Execute().GetAwaiter().GetResult());
+                                thread.Name = nextTask.TaskName;
+                                thread.Start();
+                                BackgroundThreads[nextTask.CorrelationId] = new RunningSubTask
+                                {
+                                    SubTask = nextTask,
+                                    Thread = thread
+                                };
+
+                                subTaskProgressCount += 1;
+                                CurrentState = "Running " + nextTask.TaskName;
+                                if (nextTask.RemoveWhenStopped == true)
+                                {
+                                    CurrentStateProgress = subTaskProgressCount.ToString();
+                                }
+                                else
+                                {
+                                    CurrentStateProgress = subTaskProgressCount + " of " + GetSubTaskCount();
+                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                CurrentStateProgress = subTaskProgressCount + " of " + GetSubTaskCount();
+                                Logging.LogKey(Logging.LogType.Warning, "process.queue_item", "queue.error_executing_subtask", null, new[] { nextTask.TaskName, nextTask.TaskType.ToString(), nextTask.CorrelationId.ToString() }, exceptionValue: ex);
+                                nextTask.State = QueueItemState.Stopped;
+                                nextTask.CurrentState = "Error executing subtask: " + ex.Message;
+                                nextTask.CurrentStateProgress = "";
                             }
 
                             continue;
