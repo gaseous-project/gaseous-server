@@ -90,17 +90,13 @@ namespace gaseous_server.ProcessQueue.Plugins
                 // update the import state
                 ImportGame.UpdateImportState((Guid)ParentSubTaskItem.Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Unknown, null);
 
-                ImportStateItem importState = ImportGame.GetImportState((Guid)ParentSubTaskItem.Settings);
+                ImportStateItem importState = ImportGame.GetImportStateSnapshot((Guid)ParentSubTaskItem.Settings);
                 if (importState != null)
                 {
                     Dictionary<string, object>? ProcessData = new Dictionary<string, object>();
                     ProcessData.Add("path", Path.GetFileName(importState.FileName));
                     ProcessData.Add("sessionid", importState.SessionId.ToString());
-
-                    if (importState.AdditionalData == null)
-                    {
-                        importState.AdditionalData = new Dictionary<string, object>();
-                    }
+                    Dictionary<string, object> additionalData = importState.AdditionalData ?? new Dictionary<string, object>();
 
                     // get the hash of the file
                     HashObject hash = new HashObject(importState.FileName);
@@ -155,9 +151,9 @@ namespace gaseous_server.ProcessQueue.Plugins
                         {
                             ProcessData.Add("sourceIsExternal", false);
                         }
-                        if (importState.AdditionalData.ContainsKey("libraryId"))
+                        if (additionalData.ContainsKey("libraryId"))
                         {
-                            ProcessData.Add("libraryId", importState.AdditionalData["libraryId"]);
+                            ProcessData.Add("libraryId", additionalData["libraryId"]);
                         }
 
                         if (!File.Exists(importState.FileName))
