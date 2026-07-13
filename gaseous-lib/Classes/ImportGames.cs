@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Data;
 using System.IO.Compression;
 using System.Security.Authentication;
@@ -44,12 +45,22 @@ namespace gaseous_server.Classes
         /// <summary>
         /// List of import states
         /// </summary>
-        private static readonly List<ImportStateItem> _importStates = new List<ImportStateItem>();
+        private static readonly ConcurrentDictionary<Guid, ImportStateItem> _importStates = new ConcurrentDictionary<Guid, ImportStateItem>();
 
         /// <summary>
-        /// Gets a read-only list of import state items.
+        /// Gets a read-only snapshot list of import state items.
         /// </summary>
-        public static IReadOnlyList<ImportStateItem> ImportStates => _importStates.AsReadOnly();
+        /// <remarks>
+        /// This property returns cloned items so callers can safely read state without observing
+        /// in-flight mutations from the import processing thread.
+        /// </remarks>
+        public static IReadOnlyList<ImportStateItem> ImportStates
+        {
+            get
+            {
+                return _importStates.Values.Where(x => x != null).Select(x => x.Clone()).ToList().AsReadOnly();
+            }
+        }
 
         /// <summary>
         /// Add an import state to the list
@@ -102,40 +113,49 @@ namespace gaseous_server.Classes
 
         private static void _AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId = "", long? PlatformOverride = null, Dictionary<string, object>? AdditionalProcessData = null)
         {
-            // check if an import state for this session id or file exists
-            ImportStateItem? existingImportState = _importStates.Find(x => x.SessionId == SessionId || x.FileName == FileName);
-            if (existingImportState != null)
+            if (_importStates.TryGetValue(SessionId, out ImportStateItem? existingBySession) && existingBySession != null)
             {
-                // update the existing import state
-                existingImportState.FileName = FileName;
-                existingImportState.Method = Method;
-                existingImportState.UserId = UserId;
-                existingImportState.PlatformOverride = PlatformOverride;
-                existingImportState.LastUpdated = DateTime.UtcNow;
-                existingImportState.AdditionalData = AdditionalProcessData;
+                existingBySession.FileName = FileName;
+                existingBySession.Method = Method;
+                existingBySession.UserId = UserId;
+                existingBySession.PlatformOverride = PlatformOverride;
+                existingBySession.LastUpdated = DateTime.UtcNow;
+                existingBySession.AdditionalData = AdditionalProcessData;
             }
             else
             {
-                // create a new import state
-                ImportStateItem importState = new ImportStateItem
+                ImportStateItem? existingByFile = _importStates.Values.FirstOrDefault(x => x != null && x.FileName == FileName);
+                if (existingByFile != null)
                 {
-                    FileName = FileName,
-                    Method = Method,
-                    UserId = UserId,
-                    PlatformOverride = PlatformOverride,
-                    SessionId = SessionId,
-                    AdditionalData = AdditionalProcessData
-                };
-                _importStates.Add(importState);
-
-                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_added_to_import_queue", null, new string[] { FileName, Method.ToString(), UserId });
-
-                // check if there is an ImportQueueProcessor running
-                ProcessQueue.QueueProcessor.QueueItem? queueItem = ProcessQueue.QueueProcessor.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
-                if (queueItem != null)
-                {
-                    queueItem.ForceExecute();
+                    existingByFile.FileName = FileName;
+                    existingByFile.Method = Method;
+                    existingByFile.UserId = UserId;
+                    existingByFile.PlatformOverride = PlatformOverride;
+                    existingByFile.LastUpdated = DateTime.UtcNow;
+                    existingByFile.AdditionalData = AdditionalProcessData;
                 }
+                else
+                {
+                    ImportStateItem importState = new ImportStateItem
+                    {
+                        FileName = FileName,
+                        Method = Method,
+                        UserId = UserId,
+                        PlatformOverride = PlatformOverride,
+                        SessionId = SessionId,
+                        AdditionalData = AdditionalProcessData
+                    };
+                    _importStates[SessionId] = importState;
+                }
+            }
+
+            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_added_to_import_queue", null, new string[] { FileName, Method.ToString(), UserId });
+
+            // check if there is an ImportQueueProcessor running
+            ProcessQueue.QueueProcessor.QueueItem? queueItem = ProcessQueue.QueueProcessor.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
+            if (queueItem != null)
+            {
+                queueItem.ForceExecute();
             }
         }
 
@@ -156,14 +176,18 @@ namespace gaseous_server.Classes
         /// </param>
         public static void UpdateImportState(Guid SessionId, ImportStateItem.ImportState State, ImportStateItem.ImportType Type, Dictionary<string, object>? ProcessData = null)
         {
-            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
-            if (importState != null)
+            if (_importStates.TryGetValue(SessionId, out ImportStateItem? importState) && importState != null)
             {
                 importState.State = State;
                 importState.Type = Type;
                 importState.LastUpdated = DateTime.UtcNow;
                 if (ProcessData != null)
                 {
+                    if (importState.ProcessData == null)
+                    {
+                        importState.ProcessData = new Dictionary<string, object>();
+                    }
+
                     foreach (KeyValuePair<string, object> kvp in ProcessData)
                     {
                         importState.ProcessData[kvp.Key] = kvp.Value;
@@ -179,19 +203,43 @@ namespace gaseous_server.Classes
         /// The session ID of the import
         /// </param>
         /// <returns>
-        /// The import state item for the session ID
+        /// The live import state item for the session ID, or null if not found.
         /// </returns>
+        /// <remarks>
+        /// This method returns a mutable in-store reference and is intended for writer/update paths.
+        /// Use <see cref="GetImportStateSnapshot(Guid)"/> for read-only/UI scenarios.
+        /// </remarks>
         public static ImportStateItem? GetImportState(Guid SessionId)
         {
-            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
-            if (importState != null)
+            if (_importStates.TryGetValue(SessionId, out ImportStateItem? importState) && importState != null)
             {
                 return importState;
             }
-            else
+
+            return null;
+        }
+
+        /// <summary>
+        /// Get a snapshot copy of the import state for a session ID.
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import.
+        /// </param>
+        /// <returns>
+        /// A cloned import state item for the session ID, or null if not found.
+        /// </returns>
+        /// <remarks>
+        /// This method is safe for read-only and UI use because the returned object is detached
+        /// from the in-memory store and can be read without synchronization.
+        /// </remarks>
+        public static ImportStateItem? GetImportStateSnapshot(Guid SessionId)
+        {
+            if (_importStates.TryGetValue(SessionId, out ImportStateItem? importState) && importState != null)
             {
-                return null;
+                return importState.Clone();
             }
+
+            return null;
         }
 
         /// <summary>
@@ -202,11 +250,7 @@ namespace gaseous_server.Classes
         /// </param>
         public static void RemoveImportState(Guid SessionId)
         {
-            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
-            if (importState != null)
-            {
-                _importStates.Remove(importState);
-            }
+            _importStates.TryRemove(SessionId, out _);
         }
 
         /// <summary>
@@ -224,19 +268,36 @@ namespace gaseous_server.Classes
                 DateTime cutoff = now.Subtract(timeSpan);
 
                 // remove completed import states older than 60 minutes
-                _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Completed && x.LastUpdated < cutoff);
+                List<ImportStateItem> oldCompleted = _importStates.Values
+                    .Where(x => x != null && x.State == ImportStateItem.ImportState.Completed && x.LastUpdated < cutoff)
+                    .ToList();
+                foreach (ImportStateItem importState in oldCompleted)
+                {
+                    _importStates.TryRemove(importState.SessionId, out _);
+                }
+
                 // count completed import states in datetime order and remove old completed import states if there are more than 10
-                List<ImportStateItem> completedImportStates = _importStates.Where(x => x.State == ImportStateItem.ImportState.Completed).OrderByDescending(x => x.LastUpdated).ToList();
+                List<ImportStateItem> completedImportStates = _importStates.Values
+                    .Where(x => x != null && x.State == ImportStateItem.ImportState.Completed)
+                    .OrderByDescending(x => x.LastUpdated)
+                    .ToList();
                 if (completedImportStates.Count > 10)
                 {
                     List<ImportStateItem> oldCompletedImportStates = completedImportStates.Skip(10).ToList();
                     foreach (ImportStateItem importState in oldCompletedImportStates)
                     {
-                        _importStates.Remove(importState);
+                        _importStates.TryRemove(importState.SessionId, out _);
                     }
                 }
+
                 // remove pending import states that don't have a file on disk
-                _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Pending && !File.Exists(x.FileName));
+                List<ImportStateItem> missingPending = _importStates.Values
+                    .Where(x => x != null && x.State == ImportStateItem.ImportState.Pending && (string.IsNullOrEmpty(x.FileName) || !File.Exists(x.FileName)))
+                    .ToList();
+                foreach (ImportStateItem importState in missingPending)
+                {
+                    _importStates.TryRemove(importState.SessionId, out _);
+                }
             }
             catch (Exception ex)
             {
