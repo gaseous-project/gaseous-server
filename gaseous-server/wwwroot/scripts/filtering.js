@@ -615,7 +615,6 @@ class Filtering {
             input.value = this.filterSelections[fieldName];
         }
         input.addEventListener('input', (event) => {
-            // input.addEventListener('keypress', (event) => {
             if (!this.filterSelections[fieldName]) {
                 this.filterSelections[fieldName] = {};
             }
