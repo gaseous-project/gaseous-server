@@ -614,12 +614,12 @@ class Filtering {
         if (this.filterSelections[fieldName] !== undefined) {
             input.value = this.filterSelections[fieldName];
         }
-        // input.addEventListener('keyup', (event) => {
-        input.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                this.filterSelections[fieldName] = input.value;
-                // this.ApplyFilter();
+        input.addEventListener('input', (event) => {
+            // input.addEventListener('keypress', (event) => {
+            if (!this.filterSelections[fieldName]) {
+                this.filterSelections[fieldName] = {};
             }
+            this.filterSelections[fieldName] = input.value;
         });
 
         content.appendChild(input);
@@ -677,7 +677,6 @@ class Filtering {
                     this.filterSelections[fieldName] = {};
                 }
                 this.filterSelections[fieldName][id] = input.checked;
-                // this.ApplyFilter();
             });
 
             let label = document.createElement('label');
