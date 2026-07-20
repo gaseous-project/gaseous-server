@@ -10,18 +10,8 @@ updates:
     schedule:
       interval: "weekly"
     target-branch: "main"
-  - package-ecosystem: "nuget"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "branch-v1.7.0"
   - package-ecosystem: "devcontainers"
     directory: "/"
     schedule:
       interval: "weekly"
     target-branch: "main"
-  - package-ecosystem: "devcontainers"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "branch-v1.7.0"
