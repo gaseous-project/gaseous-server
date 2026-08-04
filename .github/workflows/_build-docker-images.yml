@@ -63,9 +63,37 @@ jobs:
           fi
 
           METADATA="gaseous-server/wwwroot/emulators/EmulatorJS/.cache-created-at-epoch"
+          COMMIT_METADATA="gaseous-server/wwwroot/emulators/EmulatorJS/.cache-submodule-commit"
           NOW_EPOCH="$(date +%s)"
           MAX_AGE_DAYS="${{ inputs.ejs_cache_max_age_days }}"
           MAX_AGE_SECONDS="$((MAX_AGE_DAYS * 86400))"
+          EXPECTED_SUBMODULE_COMMIT="$(git rev-parse HEAD:gaseous-server/wwwroot/emulators/EmulatorJS 2>/dev/null || true)"
+
+          if [[ -z "$EXPECTED_SUBMODULE_COMMIT" || ! "$EXPECTED_SUBMODULE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "refresh=true" >> "$GITHUB_OUTPUT"
+            echo "reason=missing-expected-submodule-commit" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "expected_submodule_commit=$EXPECTED_SUBMODULE_COMMIT" >> "$GITHUB_OUTPUT"
+
+          if [[ ! -f "$COMMIT_METADATA" ]]; then
+            echo "refresh=true" >> "$GITHUB_OUTPUT"
+            echo "reason=missing-submodule-commit-metadata" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CACHED_SUBMODULE_COMMIT="$(cat "$COMMIT_METADATA" 2>/dev/null || true)"
+          if [[ ! "$CACHED_SUBMODULE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "refresh=true" >> "$GITHUB_OUTPUT"
+            echo "reason=invalid-submodule-commit-metadata" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$CACHED_SUBMODULE_COMMIT" != "$EXPECTED_SUBMODULE_COMMIT" ]]; then
+            echo "refresh=true" >> "$GITHUB_OUTPUT"
+            echo "reason=submodule-commit-changed" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           if [[ ! -f "$METADATA" ]]; then
             echo "refresh=true" >> "$GITHUB_OUTPUT"
@@ -98,7 +126,10 @@ jobs:
         if: ${{ !inputs.always_refresh_ejs && steps.ejs-refresh.outputs.refresh == 'true' }}
         shell: bash
         run: |
+          set -euo pipefail
+          EXPECTED_SUBMODULE_COMMIT="$(git rev-parse HEAD:gaseous-server/wwwroot/emulators/EmulatorJS)"
           date +%s > gaseous-server/wwwroot/emulators/EmulatorJS/.cache-created-at-epoch
+          echo "$EXPECTED_SUBMODULE_COMMIT" > gaseous-server/wwwroot/emulators/EmulatorJS/.cache-submodule-commit
       - name: Save refreshed EmulatorJS cache
         if: ${{ !inputs.always_refresh_ejs && steps.ejs-refresh.outputs.refresh == 'true' }}
         uses: actions/cache/save@v4
