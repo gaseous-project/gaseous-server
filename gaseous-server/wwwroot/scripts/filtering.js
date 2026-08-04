@@ -614,11 +614,24 @@ class Filtering {
         if (this.filterSelections[fieldName] !== undefined) {
             input.value = this.filterSelections[fieldName];
         }
-        input.addEventListener('input', (event) => {
+        const updateSelectionValue = () => {
             if (!this.filterSelections[fieldName]) {
                 this.filterSelections[fieldName] = {};
             }
             this.filterSelections[fieldName] = input.value;
+        };
+
+        input.addEventListener('input', updateSelectionValue);
+        input.addEventListener('change', updateSelectionValue);
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+
+                input.dispatchEvent(new Event('change'));
+
+                this.ApplyFilter();
+            }
         });
 
         content.appendChild(input);
@@ -728,6 +741,23 @@ class Filtering {
                 maxInput.value = this.filterSelections[fieldName].max;
             }
         }
+
+        const applyOnEnter = (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+
+                if (event.target === minInput) {
+                    minInput.dispatchEvent(new Event('change'));
+                } else if (event.target === maxInput) {
+                    maxInput.dispatchEvent(new Event('change'));
+                }
+
+                this.ApplyFilter();
+            }
+        };
+
+        minInput.addEventListener('keydown', applyOnEnter);
+        maxInput.addEventListener('keydown', applyOnEnter);
 
         selectCheckbox.addEventListener('change', () => {
             if (selectCheckbox.checked === false) {
