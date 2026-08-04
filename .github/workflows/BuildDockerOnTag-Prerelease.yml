@@ -20,4 +20,5 @@ jobs:
       version_tag: ${{ github.ref_name }}
       tag_to_version: ${{ github.ref }}
       include_latest: false
+      always_refresh_ejs: true
     secrets: inherit

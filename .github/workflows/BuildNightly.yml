@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '15 4 * * *'
   workflow_dispatch:
+    inputs:
+      ejs_cache_max_age_days:
+        description: Refresh EmulatorJS assets after this many days
+        required: false
+        default: '7'
 
 permissions:
   packages: write
@@ -48,4 +53,6 @@ jobs:
       version_tag: nightly
       tag_to_version: 0.0.0-nightly
       include_latest: false
+      always_refresh_ejs: false
+      ejs_cache_max_age_days: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ejs_cache_max_age_days || '7' }}
     secrets: inherit
