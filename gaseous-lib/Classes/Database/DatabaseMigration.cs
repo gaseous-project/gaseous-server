@@ -130,7 +130,7 @@ namespace gaseous_server.Classes
                         case 1031:
                             Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
                             // build tables for metadata storage
-                            TableBuilder_1031.BuildTables_1031();
+                            TableBuilder.BuildTables();
                             sql = "RENAME TABLE AgeGroup TO Metadata_AgeGroup; RENAME TABLE ClearLogo TO Metadata_ClearLogo;";
                             dbDict.Clear();
                             await db.ExecuteCMDAsync(sql, dbDict);
@@ -430,6 +430,7 @@ namespace gaseous_server.Classes
             }
 
             // perform any metadata table migrations that are needed
+            TableBuilder.BuildTables();
             await gaseous_server.Classes.Metadata.Utility.MetadataTableBuilder.BuildTableFromType("gaseous", "Metadata", typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game), "", "NameThe, AgeGroupId");
             await gaseous_server.Classes.Metadata.Utility.MetadataTableBuilder.BuildTableFromType("gaseous", "Metadata", typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.GameLocalization), "", "NameThe");
         }
@@ -663,76 +664,35 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static class TableBuilder_1031
+        public static class TableBuilder
         {
-            public static void BuildTables_1031()
+            public static void BuildTables()
             {
-                BuildTableFromType(typeof(IGDB.Models.AgeRating));
-                BuildTableFromType(typeof(IGDB.Models.AgeRatingCategory));
-                BuildTableFromType(typeof(IGDB.Models.AgeRatingContentDescriptionV2));
-                BuildTableFromType(typeof(IGDB.Models.AgeRatingOrganization));
-                BuildTableFromType(typeof(IGDB.Models.AlternativeName));
-                BuildTableFromType(typeof(IGDB.Models.Artwork));
-                BuildTableFromType(typeof(IGDB.Models.Character));
-                BuildTableFromType(typeof(IGDB.Models.CharacterGender));
-                BuildTableFromType(typeof(IGDB.Models.CharacterMugShot));
-                BuildTableFromType(typeof(IGDB.Models.CharacterSpecies));
-                BuildTableFromType(typeof(IGDB.Models.Collection));
-                BuildTableFromType(typeof(IGDB.Models.CollectionMembership));
-                BuildTableFromType(typeof(IGDB.Models.CollectionMembershipType));
-                BuildTableFromType(typeof(IGDB.Models.CollectionRelation));
-                BuildTableFromType(typeof(IGDB.Models.CollectionRelationType));
-                BuildTableFromType(typeof(IGDB.Models.CollectionType));
-                BuildTableFromType(typeof(IGDB.Models.Company));
-                BuildTableFromType(typeof(IGDB.Models.CompanyLogo));
-                BuildTableFromType(typeof(IGDB.Models.CompanyStatus));
-                BuildTableFromType(typeof(IGDB.Models.CompanyWebsite));
-                BuildTableFromType(typeof(IGDB.Models.Cover));
-                BuildTableFromType(typeof(IGDB.Models.Event));
-                BuildTableFromType(typeof(IGDB.Models.EventLogo));
-                BuildTableFromType(typeof(IGDB.Models.EventNetwork));
-                BuildTableFromType(typeof(IGDB.Models.ExternalGame));
-                BuildTableFromType(typeof(IGDB.Models.ExternalGameSource));
-                BuildTableFromType(typeof(IGDB.Models.Franchise));
-                BuildTableFromType(typeof(IGDB.Models.Game));
-                BuildTableFromType(typeof(IGDB.Models.GameEngine));
-                BuildTableFromType(typeof(IGDB.Models.GameEngineLogo));
-                BuildTableFromType(typeof(IGDB.Models.GameLocalization));
-                BuildTableFromType(typeof(IGDB.Models.GameMode));
-                BuildTableFromType(typeof(IGDB.Models.GameReleaseFormat));
-                BuildTableFromType(typeof(IGDB.Models.GameStatus));
-                BuildTableFromType(typeof(IGDB.Models.GameTimeToBeat));
-                BuildTableFromType(typeof(IGDB.Models.GameType));
-                BuildTableFromType(typeof(IGDB.Models.GameVersion));
-                BuildTableFromType(typeof(IGDB.Models.GameVersionFeature));
-                BuildTableFromType(typeof(IGDB.Models.GameVersionFeatureValue));
-                BuildTableFromType(typeof(IGDB.Models.GameVideo));
-                BuildTableFromType(typeof(IGDB.Models.Genre));
-                BuildTableFromType(typeof(IGDB.Models.InvolvedCompany));
-                BuildTableFromType(typeof(IGDB.Models.Keyword));
-                BuildTableFromType(typeof(IGDB.Models.Language));
-                BuildTableFromType(typeof(IGDB.Models.LanguageSupport));
-                BuildTableFromType(typeof(IGDB.Models.LanguageSupportType));
-                BuildTableFromType(typeof(IGDB.Models.MultiplayerMode));
-                BuildTableFromType(typeof(IGDB.Models.NetworkType));
-                BuildTableFromType(typeof(IGDB.Models.Platform));
-                BuildTableFromType(typeof(IGDB.Models.PlatformFamily));
-                BuildTableFromType(typeof(IGDB.Models.PlatformLogo));
-                BuildTableFromType(typeof(IGDB.Models.PlatformVersion));
-                BuildTableFromType(typeof(IGDB.Models.PlatformVersionCompany));
-                BuildTableFromType(typeof(IGDB.Models.PlatformVersionReleaseDate));
-                BuildTableFromType(typeof(IGDB.Models.PlatformWebsite));
-                BuildTableFromType(typeof(IGDB.Models.PlayerPerspective));
-                BuildTableFromType(typeof(IGDB.Models.PopularityPrimitive));
-                BuildTableFromType(typeof(IGDB.Models.PopularityType));
-                BuildTableFromType(typeof(IGDB.Models.Region));
-                BuildTableFromType(typeof(IGDB.Models.ReleaseDate));
-                BuildTableFromType(typeof(IGDB.Models.ReleaseDateRegion));
-                BuildTableFromType(typeof(IGDB.Models.ReleaseDateStatus));
-                BuildTableFromType(typeof(IGDB.Models.Screenshot));
-                BuildTableFromType(typeof(IGDB.Models.Theme));
-                BuildTableFromType(typeof(IGDB.Models.Website));
-                BuildTableFromType(typeof(IGDB.Models.WebsiteType));
+                Type[] allTypes = typeof(IGDB.Models.Game).Assembly.GetTypes();
+                List<Type> modelTypes = new List<Type>();
+
+                foreach (Type type in allTypes)
+                {
+                    if (type.Namespace != "IGDB.Models")
+                    {
+                        continue;
+                    }
+
+                    if (!type.IsClass || type.IsAbstract || type.IsGenericTypeDefinition)
+                    {
+                        continue;
+                    }
+
+                    modelTypes.Add(type);
+                }
+
+                // Keep ordering deterministic so migration runs in a stable sequence.
+                modelTypes.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+
+                foreach (Type modelType in modelTypes)
+                {
+                    BuildTableFromType(modelType);
+                }
             }
 
             /// <summary>
@@ -784,13 +744,34 @@ namespace gaseous_server.Classes
                 // Get the properties of the class
                 PropertyInfo[] properties = type.GetProperties();
 
-                // Create the table with the basic structure if it does not exist
-                string createTableQuery = $"CREATE TABLE IF NOT EXISTS `{tableName}` (`Id` BIGINT PRIMARY KEY, `dateAdded` DATETIME DEFAULT CURRENT_TIMESTAMP, `lastUpdated` DATETIME DEFAULT CURRENT_TIMESTAMP )";
-                db.ExecuteNonQuery(createTableQuery);
+                // Detect whether the metadata table exists.
+                string checkMetadataTableExistsQuery = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '{tableName}'";
+                var metadataTableCheck = db.ExecuteCMD(checkMetadataTableExistsQuery);
+                bool metadataTableExists = Convert.ToInt32(metadataTableCheck.Rows[0][0]) > 0;
 
-                // Add the sourceId column if it does not exist
-                string addSourceIdQuery = $"ALTER TABLE `{tableName}` ADD COLUMN IF NOT EXISTS `SourceId` INT";
-                db.ExecuteNonQuery(addSourceIdQuery);
+                // Create the table only when it does not already exist.
+                if (!metadataTableExists)
+                {
+                    string createTableQuery = $"CREATE TABLE `{tableName}` (`Id` BIGINT PRIMARY KEY, `dateAdded` DATETIME DEFAULT CURRENT_TIMESTAMP, `lastUpdated` DATETIME DEFAULT CURRENT_TIMESTAMP )";
+                    db.ExecuteNonQuery(createTableQuery);
+                }
+
+                // Load existing columns once, then decide which schema changes are actually needed.
+                string loadColumnsQuery = $"SHOW COLUMNS FROM `{tableName}`";
+                DataTable existingColumnsData = db.ExecuteCMD(loadColumnsQuery);
+                Dictionary<string, string> existingColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (DataRow existingColumn in existingColumnsData.Rows)
+                {
+                    existingColumns[existingColumn["Field"].ToString()] = existingColumn["Type"].ToString();
+                }
+
+                // Add SourceId only if missing.
+                if (!existingColumns.ContainsKey("SourceId"))
+                {
+                    string addSourceIdQuery = $"ALTER TABLE `{tableName}` ADD COLUMN `SourceId` INT";
+                    db.ExecuteNonQuery(addSourceIdQuery);
+                    existingColumns["SourceId"] = "int";
+                }
 
                 // Loop through each property to add it as a column in the table
                 foreach (PropertyInfo property in properties)
@@ -837,14 +818,12 @@ namespace gaseous_server.Classes
                             break;
                     }
 
-                    // check if there is a column with the name of the property
-                    string checkColumnQuery = $"SHOW COLUMNS FROM `{tableName}` LIKE '{columnName}'";
-                    var result = db.ExecuteCMD(checkColumnQuery);
-                    if (result.Rows.Count > 0)
+                    if (existingColumns.TryGetValue(columnName, out string existingType))
                     {
                         // Column already exists, check if the type matches
-                        string existingType = result.Rows[0]["Type"].ToString();
-                        if (existingType.ToLower().Split("(")[0] != columnType.ToLower().Split("(")[0] && existingType != "text" && existingType != "longtext")
+                        string normalizedExistingType = existingType.ToLower().Split("(")[0];
+                        string normalizedColumnType = columnType.ToLower().Split("(")[0];
+                        if (normalizedExistingType != normalizedColumnType && normalizedExistingType != "text" && normalizedExistingType != "longtext")
                         {
                             // Type mismatch: modify the column to expected type
                             Logging.LogKey(Logging.LogType.Information, "process.database",
@@ -861,7 +840,6 @@ namespace gaseous_server.Classes
                                     "database.modify_column_type_failed",
                                     null, new[] { columnName, tableName, ex.Message }, ex);
                             }
-                            continue;
                         }
                         continue; // Skip this column as it already exists with the correct type
                     }
@@ -870,8 +848,9 @@ namespace gaseous_server.Classes
                     Logging.LogKey(Logging.LogType.Information, "process.database",
                         "database.adding_column_to_table",
                         null, new[] { columnName, columnType, tableName });
-                    string addColumnQuery = $"ALTER TABLE `{tableName}` ADD COLUMN IF NOT EXISTS `{columnName}` {columnType}";
+                    string addColumnQuery = $"ALTER TABLE `{tableName}` ADD COLUMN `{columnName}` {columnType}";
                     db.ExecuteNonQuery(addColumnQuery);
+                    existingColumns[columnName] = columnType;
                 }
             }
         }
