@@ -24,8 +24,8 @@ on:
       ejs_cache_max_age_days:
         description: For non-forced builds, refresh EmulatorJS when cached content reaches this age in days
         required: false
-        default: 7
-        type: number
+        default: '7'
+        type: string
 
 jobs:
   Staging:
