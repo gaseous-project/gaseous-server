@@ -475,13 +475,38 @@ class GameCard {
                 headers: {
                     'Content-Type': 'application/json'
                 }
-            }).then(response => response.json()).then(data => {
-                if (data) {
+            })
+                .then(async response => {
+                    console.log('developers status', response.status);
+                    console.log('developers content-type', response.headers.get('content-type'));
+
+                    const text = await response.text();
+                    console.log('developers raw body', text);
+
+                    if (!text) {
+                        return [];
+                    }
+
+                    try {
+                        return JSON.parse(text);
+                    } catch (err) {
+                        console.error('developers JSON parse failed', err);
+                        return [];
+                    }
+                })
+                .then(data => {
+                    console.log('developers parsed data', data);
+
+                    if (!Array.isArray(data)) {
+                        return;
+                    }
+
                     let developers = [];
                     data.forEach(element => {
-                        if (element.involvement.developer === true) {
-                            if (!developers.includes(element.company.name)) {
-                                developers.push(element.company.name);
+                        if (element?.involvement?.developer === true) {
+                            const companyName = element?.company?.name;
+                            if (companyName && !developers.includes(companyName)) {
+                                developers.push(companyName);
                             }
                         }
                     });
@@ -491,8 +516,10 @@ class GameCard {
                         developersLabel.innerHTML = developers.join(', ');
                         developersLabel.style.display = '';
                     }
-                }
-            });
+                })
+                .catch(err => {
+                    console.error('developers fetch failed', err);
+                });
         }
 
         // set the genres
