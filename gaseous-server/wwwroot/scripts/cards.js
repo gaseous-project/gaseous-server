@@ -477,11 +477,11 @@ class GameCard {
                 }
             })
                 .then(async response => {
-                    console.log('developers status', response.status);
-                    console.log('developers content-type', response.headers.get('content-type'));
+                    // console.log('developers status', response.status);
+                    // console.log('developers content-type', response.headers.get('content-type'));
 
                     const text = await response.text();
-                    console.log('developers raw body', text);
+                    // console.log('developers raw body', text);
 
                     if (!text) {
                         return [];
@@ -495,7 +495,7 @@ class GameCard {
                     }
                 })
                 .then(data => {
-                    console.log('developers parsed data', data);
+                    // console.log('developers parsed data', data);
 
                     if (!Array.isArray(data)) {
                         return;
@@ -513,7 +513,7 @@ class GameCard {
 
                     if (developers.length > 0) {
                         let developersLabel = this.card.cardBody.querySelector('#card-developers');
-                        developersLabel.innerHTML = developers.join(', ');
+                        developersLabel.textContent = developers.join(', ');
                         developersLabel.style.display = '';
                     }
                 })
