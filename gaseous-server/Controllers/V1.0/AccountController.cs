@@ -1,8 +1,10 @@
 using System.Data;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Authentication;
 using gaseous_server.Classes;
+using gaseous_server.Classes.Metadata;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -917,6 +919,7 @@ namespace gaseous_server.Controllers
                     var addLoginResult = await _userManager.AddLoginAsync(user, info);
                     if (addLoginResult.Succeeded)
                     {
+                        await ApplyOidcClaimsAsync(user, info.Principal);
                         await _signInManager.SignInAsync(user, isPersistent: false);
                         return LocalRedirect(returnUrl);
                     }
@@ -933,13 +936,132 @@ namespace gaseous_server.Controllers
                     if (identityResult.Succeeded)
                     {
                         await _userManager.AddLoginAsync(user, info);
-                        await _userManager.AddToRoleAsync(user, "Player");
+                        await ApplyOidcClaimsAsync(user, info.Principal);
                         await _signInManager.SignInAsync(user, isPersistent: false);
                         return LocalRedirect(returnUrl);
                     }
                     return Unauthorized(identityResult.Errors);
                 }
             }
+        }
+
+        private async Task ApplyOidcClaimsAsync(ApplicationUser user, ClaimsPrincipal principal)
+        {
+            var role = principal.Claims
+                .Where(claim => claim.Type.Equals("gaseous_role", StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("role", StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("roles", StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("groups", StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("realm_access", StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("resource_access", StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals(ClaimTypes.Role, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(claim => ExpandClaimValues(claim.Value))
+                .Select(value => value.Trim())
+                .Where(value => value.Equals("Admin", StringComparison.OrdinalIgnoreCase)
+                    || value.Equals("Gamer", StringComparison.OrdinalIgnoreCase)
+                    || value.Equals("Player", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(value => value.Equals("Admin", StringComparison.OrdinalIgnoreCase) ? 3
+                    : value.Equals("Gamer", StringComparison.OrdinalIgnoreCase) ? 2 : 1)
+                .FirstOrDefault();
+
+            if (role != null)
+            {
+                var existingRoles = await _userManager.GetRolesAsync(user);
+                var rolesToRemove = existingRoles.Where(existingRole =>
+                    existingRole.Equals("Admin", StringComparison.OrdinalIgnoreCase)
+                    || existingRole.Equals("Gamer", StringComparison.OrdinalIgnoreCase)
+                    || existingRole.Equals("Player", StringComparison.OrdinalIgnoreCase));
+                await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+                await _userManager.AddToRoleAsync(user, role);
+            }
+            else if (!await _userManager.IsInRoleAsync(user, "Player")
+                && !await _userManager.IsInRoleAsync(user, "Gamer")
+                && !await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                await _userManager.AddToRoleAsync(user, "Player");
+            }
+
+            var ageRestriction = principal.FindFirstValue("gaseous_age_restriction");
+            user.SecurityProfile ??= new SecurityProfileViewModel();
+            user.SecurityProfile.AgeRestrictionPolicy ??= new SecurityProfileViewModel.AgeRestrictionItem();
+            if (TryParseAgeRestriction(ageRestriction, out var parsedAgeRestriction))
+            {
+                user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction = parsedAgeRestriction;
+            }
+
+            var includeUnrated = principal.FindFirstValue("gaseous_include_unrated");
+            if (bool.TryParse(includeUnrated, out var parsedIncludeUnrated))
+            {
+                user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated = parsedIncludeUnrated;
+            }
+
+            if (ageRestriction != null || includeUnrated != null)
+            {
+                await _userManager.UpdateAsync(user);
+            }
+        }
+
+        private static IEnumerable<string> ExpandClaimValues(string value)
+        {
+            if (value.StartsWith("[", StringComparison.Ordinal))
+            {
+                try
+                {
+                    using var document = JsonDocument.Parse(value);
+                    return ExpandJsonClaimValues(document.RootElement).ToList();
+                }
+                catch (JsonException)
+                {
+                }
+            }
+
+            return new[] { value };
+        }
+
+        private static IEnumerable<string> ExpandJsonClaimValues(JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.String)
+            {
+                return new[] { element.GetString() ?? string.Empty };
+            }
+
+            if (element.ValueKind == JsonValueKind.Array)
+            {
+                return element.EnumerateArray().SelectMany(ExpandJsonClaimValues);
+            }
+
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                return element.EnumerateObject().SelectMany(property => ExpandJsonClaimValues(property.Value));
+            }
+
+            return Array.Empty<string>();
+        }
+
+        private static bool TryParseAgeRestriction(string? value, out AgeGroups.AgeRestrictionGroupings ageRestriction)
+        {
+            ageRestriction = AgeGroups.AgeRestrictionGroupings.Adult;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            if (Enum.TryParse(value, true, out AgeGroups.AgeRestrictionGroupings namedAgeRestriction)
+                && namedAgeRestriction != AgeGroups.AgeRestrictionGroupings.Unclassified)
+            {
+                ageRestriction = namedAgeRestriction;
+                return true;
+            }
+
+            if (int.TryParse(value, out var numericAgeRestriction)
+                && Enum.IsDefined(typeof(AgeGroups.AgeRestrictionGroupings), numericAgeRestriction)
+                && numericAgeRestriction > 0)
+            {
+                ageRestriction = (AgeGroups.AgeRestrictionGroupings)numericAgeRestriction;
+                return true;
+            }
+
+            return false;
         }
 
         [HttpGet]
