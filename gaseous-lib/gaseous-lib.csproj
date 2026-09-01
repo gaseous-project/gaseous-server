@@ -16,7 +16,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="gaseous-signature-parser" Version="2.7.3" />
-    <PackageReference Include="hasheous-client" Version="1.5.4" />
+    <PackageReference Include="hasheous-client" Version="1.5.5" />
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.16.0" />
     <PackageReference Include="sharpcompress" Version="0.50.4" />
     <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.2.24" />
