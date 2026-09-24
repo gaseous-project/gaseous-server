@@ -179,63 +179,74 @@ namespace gaseous_server.Controllers
                     }
 
                     // get image info from binary files
-                    var info = new ImageMagick.MagickImageInfo(imagePath);
-                    switch (info.Format)
+                    try
                     {
-                        case ImageMagick.MagickFormat.Jpeg:
-                            extension = ".jpg";
-                            mimeType = "image/jpg";
-                            break;
+                        var info = new ImageMagick.MagickImageInfo(imagePath);
+                        switch (info.Format)
+                        {
+                            case ImageMagick.MagickFormat.Jpeg:
+                                extension = ".jpg";
+                                mimeType = "image/jpg";
+                                break;
 
-                        case ImageMagick.MagickFormat.Png:
-                            extension = ".png";
-                            mimeType = "image/png";
-                            break;
+                            case ImageMagick.MagickFormat.Png:
+                                extension = ".png";
+                                mimeType = "image/png";
+                                break;
 
-                        case ImageMagick.MagickFormat.Gif:
-                            extension = ".gif";
-                            mimeType = "image/gif";
-                            break;
+                            case ImageMagick.MagickFormat.Gif:
+                                extension = ".gif";
+                                mimeType = "image/gif";
+                                break;
 
-                        case ImageMagick.MagickFormat.Bmp:
-                            extension = ".bmp";
-                            mimeType = "image/bmp";
-                            break;
+                            case ImageMagick.MagickFormat.Bmp:
+                                extension = ".bmp";
+                                mimeType = "image/bmp";
+                                break;
 
-                        case ImageMagick.MagickFormat.Tiff:
-                            extension = ".tiff";
-                            mimeType = "image/tiff";
-                            break;
+                            case ImageMagick.MagickFormat.Tiff:
+                                extension = ".tiff";
+                                mimeType = "image/tiff";
+                                break;
 
-                        case ImageMagick.MagickFormat.Unknown:
-                            extension = ".jpg";
-                            mimeType = "image/jpg";
-                            break;
+                            case ImageMagick.MagickFormat.Unknown:
+                                extension = ".jpg";
+                                mimeType = "image/jpg";
+                                break;
 
-                        case ImageMagick.MagickFormat.WebP:
-                            extension = ".webp";
-                            mimeType = "image/webp";
-                            break;
+                            case ImageMagick.MagickFormat.WebP:
+                                extension = ".webp";
+                                mimeType = "image/webp";
+                                break;
 
-                        case ImageMagick.MagickFormat.Heic:
-                            extension = ".heic";
-                            mimeType = "image/heic";
-                            break;
+                            case ImageMagick.MagickFormat.Heic:
+                                extension = ".heic";
+                                mimeType = "image/heic";
+                                break;
 
-                        case ImageMagick.MagickFormat.Heif:
-                            extension = ".heif";
-                            mimeType = "image/heif";
-                            break;
+                            case ImageMagick.MagickFormat.Heif:
+                                extension = ".heif";
+                                mimeType = "image/heif";
+                                break;
 
-                        case ImageMagick.MagickFormat.Svg:
-                            extension = ".svg";
-                            mimeType = "image/svg+xml";
-                            break;
+                            case ImageMagick.MagickFormat.Svg:
+                                extension = ".svg";
+                                mimeType = "image/svg+xml";
+                                break;
 
-                        default:
-                            extension = ".jpg";
-                            mimeType = "image/jpg";
-                            break;
+                            default:
+                                extension = ".jpg";
+                                mimeType = "image/jpg";
+                                break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.LogKey(Logging.LogType.Warning, "PlatformsController", $"An error occurred while trying to determine the image format for platform logo: {ex.Message}", null, null, ex);
+                        // assume the file is bad and delete it
+                        System.IO.File.Delete(imagePath);
+                        // return the dummy image
+                        return GetDummyImage();
                     }
 
                     string filename = logoObject.ImageId + extension;

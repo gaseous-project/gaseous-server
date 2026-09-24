@@ -360,139 +360,147 @@ namespace gaseous_server.Classes
         /// </param>
         public static void ImportGameFile(string FilePath, HashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform, ProcessQueue.Plugins.ImportQueueProcessor.SubTaskItem? CallingSubTask = null)
         {
-            GameFileInfo.Add("type", "rom");
-
-            // check to make sure we don't already have this file imported
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-
-            sql = "SELECT COUNT(Id) AS count FROM view_Games_Roms WHERE MD5=@md5 AND SHA1=@sha1;";
-            dbDict.Add("md5", Hash.md5hash);
-            dbDict.Add("sha1", Hash.sha1hash);
-            dbDict.Add("crc", Hash.crc32hash);
-            DataTable importDB = db.ExecuteCMD(sql, dbDict);
-            if ((Int64)importDB.Rows[0]["count"] > 0)
+            try
             {
-                if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
+                GameFileInfo.Add("type", "rom");
+
+                // check to make sure we don't already have this file imported
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+
+                sql = "SELECT COUNT(Id) AS count FROM view_Games_Roms WHERE MD5=@md5 AND SHA1=@sha1;";
+                dbDict.Add("md5", Hash.md5hash);
+                dbDict.Add("sha1", Hash.sha1hash);
+                dbDict.Add("crc", Hash.crc32hash);
+                DataTable importDB = db.ExecuteCMD(sql, dbDict);
+                if ((Int64)importDB.Rows[0]["count"] > 0)
                 {
-                    // import source was the import directory
-                    Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.file_already_in_database_moving_to_duplicates", null, new string[] { FilePath, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory });
-
-                    string targetPathWithFileName = FilePath.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
-                    string targetPath = Path.GetDirectoryName(targetPathWithFileName);
-
-                    if (!Directory.Exists(targetPath))
+                    if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
                     {
-                        Directory.CreateDirectory(targetPath);
-                    }
-                    File.Move(FilePath, targetPathWithFileName, true);
-                }
-                else if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
-                {
-                    // import source was the upload directory
-                    Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.file_already_in_database_skipping_import", null, new string[] { FilePath });
+                        // import source was the import directory
+                        Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.file_already_in_database_moving_to_duplicates", null, new string[] { FilePath, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory });
 
-                    // delete the file
-                    File.Delete(FilePath);
-                }
+                        string targetPathWithFileName = FilePath.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
+                        string targetPath = Path.GetDirectoryName(targetPathWithFileName);
 
-                GameFileInfo.Add("status", "duplicate");
-            }
-            else
-            {
-                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_not_in_database_processing", null, new string[] { FilePath });
-
-                GameLibrary.LibraryItem gameLibrary = GameLibrary.GetDefaultLibrary;
-                if (GameFileInfo.ContainsKey("libraryId"))
-                {
-                    gameLibrary = GameLibrary.GetLibrary((int)GameFileInfo["libraryId"]).Result;
-                }
-
-                int totalSteps = 7;
-
-                if (CallingSubTask != null)
-                {
-                    CallingSubTask.ParentSubTaskItem.CurrentState = "Computing file hashes";
-                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"1 of {totalSteps}";
-
-                }
-                FileSignature fileSignature = new FileSignature();
-                FileHash fileHash = GetFileHashesAsync(gameLibrary, FilePath).Result;
-
-                if (CallingSubTask != null)
-                {
-                    CallingSubTask.ParentSubTaskItem.CurrentState = "Determining file signature";
-                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"2 of {totalSteps}";
-                }
-                var (updatedFileHash, discoveredSignature) = fileSignature.GetFileSignatureAsync(gameLibrary, fileHash).Result;
-
-                if (CallingSubTask != null)
-                {
-                    CallingSubTask.ParentSubTaskItem.CurrentState = "Searching for metadata";
-                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"3 of {totalSteps}";
-                }
-                if (discoveredSignature.Flags.GameId == 0)
-                {
-                    try
-                    {
-                        HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.PlatformId, false).Result;
-                        if (discoveredGame != null && discoveredGame.Id != null)
+                        if (!Directory.Exists(targetPath))
                         {
-                            discoveredSignature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+                            Directory.CreateDirectory(targetPath);
                         }
+                        File.Move(FilePath, targetPathWithFileName, true);
                     }
-                    catch (Exception ex)
+                    else if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
                     {
-                        Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.error_searching_for_game_in_igdb", null, new string[] { ex.Message });
+                        // import source was the upload directory
+                        Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.file_already_in_database_skipping_import", null, new string[] { FilePath });
+
+                        // delete the file
+                        File.Delete(FilePath);
                     }
 
+                    GameFileInfo.Add("status", "duplicate");
                 }
-
-                bool sourceIsExternal = true;
-                if (GameFileInfo.ContainsKey("sourceIsExternal"))
+                else
                 {
-                    sourceIsExternal = (bool)GameFileInfo["sourceIsExternal"];
-                }
+                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_not_in_database_processing", null, new string[] { FilePath });
 
-                // add to database
-                if (CallingSubTask != null)
-                {
-                    CallingSubTask.ParentSubTaskItem.CurrentState = "Fetching metadata";
-                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"4 of {totalSteps}";
-                }
-                Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId).Result;
-                Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
+                    GameLibrary.LibraryItem gameLibrary = GameLibrary.GetDefaultLibrary;
+                    if (GameFileInfo.ContainsKey("libraryId"))
+                    {
+                        gameLibrary = GameLibrary.GetLibrary((int)GameFileInfo["libraryId"]).Result;
+                    }
 
-                if (CallingSubTask != null)
-                {
-                    CallingSubTask.ParentSubTaskItem.CurrentState = "Fetching metadata assets";
-                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"5 of {totalSteps}";
-                }
-                MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
+                    int totalSteps = 7;
 
-                if (CallingSubTask != null)
-                {
-                    CallingSubTask.ParentSubTaskItem.CurrentState = "Storing game in library";
-                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"6 of {totalSteps}";
-                }
-                long RomId = StoreGame(gameLibrary, updatedFileHash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
-                gaseous_server.Classes.Roms.GameRomItem romItem = Roms.GetRom(RomId).Result;
+                    if (CallingSubTask != null)
+                    {
+                        CallingSubTask.ParentSubTaskItem.CurrentState = "Computing file hashes";
+                        CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"1 of {totalSteps}";
 
-                // build return value
-                GameFileInfo.Add("romid", RomId);
-                GameFileInfo.Add("metadatamapid", map.Id);
-                GameFileInfo.Add("platform", determinedPlatform);
-                GameFileInfo.Add("game", determinedGame);
-                GameFileInfo.Add("signature", discoveredSignature);
-                GameFileInfo.Add("rom", romItem);
-                GameFileInfo.Add("status", "imported");
+                    }
+                    FileSignature fileSignature = new FileSignature();
+                    FileHash fileHash = GetFileHashesAsync(gameLibrary, FilePath).Result;
 
-                if (CallingSubTask != null)
-                {
-                    CallingSubTask.ParentSubTaskItem.CurrentState = "Completed";
-                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"7 of {totalSteps}";
+                    if (CallingSubTask != null)
+                    {
+                        CallingSubTask.ParentSubTaskItem.CurrentState = "Determining file signature";
+                        CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"2 of {totalSteps}";
+                    }
+                    var (updatedFileHash, discoveredSignature) = fileSignature.GetFileSignatureAsync(gameLibrary, fileHash).Result;
+
+                    if (CallingSubTask != null)
+                    {
+                        CallingSubTask.ParentSubTaskItem.CurrentState = "Searching for metadata";
+                        CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"3 of {totalSteps}";
+                    }
+                    if (discoveredSignature.Flags.GameId == 0)
+                    {
+                        try
+                        {
+                            HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.PlatformId, false).Result;
+                            if (discoveredGame != null && discoveredGame.Id != null)
+                            {
+                                discoveredSignature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.error_searching_for_game_in_igdb", null, new string[] { ex.Message });
+                        }
+
+                    }
+
+                    bool sourceIsExternal = true;
+                    if (GameFileInfo.ContainsKey("sourceIsExternal"))
+                    {
+                        sourceIsExternal = (bool)GameFileInfo["sourceIsExternal"];
+                    }
+
+                    // add to database
+                    if (CallingSubTask != null)
+                    {
+                        CallingSubTask.ParentSubTaskItem.CurrentState = "Fetching metadata";
+                        CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"4 of {totalSteps}";
+                    }
+                    Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId).Result;
+                    Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
+
+                    if (CallingSubTask != null)
+                    {
+                        CallingSubTask.ParentSubTaskItem.CurrentState = "Fetching metadata assets";
+                        CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"5 of {totalSteps}";
+                    }
+                    MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
+
+                    if (CallingSubTask != null)
+                    {
+                        CallingSubTask.ParentSubTaskItem.CurrentState = "Storing game in library";
+                        CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"6 of {totalSteps}";
+                    }
+                    long RomId = StoreGame(gameLibrary, updatedFileHash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
+                    gaseous_server.Classes.Roms.GameRomItem romItem = Roms.GetRom(RomId).Result;
+
+                    // build return value
+                    GameFileInfo.Add("romid", RomId);
+                    GameFileInfo.Add("metadatamapid", map.Id);
+                    GameFileInfo.Add("platform", determinedPlatform);
+                    GameFileInfo.Add("game", determinedGame);
+                    GameFileInfo.Add("signature", discoveredSignature);
+                    GameFileInfo.Add("rom", romItem);
+                    GameFileInfo.Add("status", "imported");
+
+                    if (CallingSubTask != null)
+                    {
+                        CallingSubTask.ParentSubTaskItem.CurrentState = "Completed";
+                        CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"7 of {totalSteps}";
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                // handle the exception (e.g., log it)
+                Logging.LogKey(Logging.LogType.Warning, "process.import_game", "import_game.failed", exceptionValue: ex);
             }
         }
 
@@ -641,17 +649,17 @@ namespace gaseous_server.Classes
 
             string fileName = Path.GetFileName(filePath);
             string fileExt = Path.GetExtension(filePath);
-            if (SourcesThatAllowROMRename.Contains(signature.Rom.SignatureSource))
-            {
-                // the source of the signature allows us to rename the ROM to match the game name - use the game name as the file name if it's not null or empty, otherwise use the original file name
-                fileName = Common.ReturnValueIfNull(signature.Rom.Name, fileName).ToString();
+            // if (SourcesThatAllowROMRename.Contains(signature.Rom.SignatureSource))
+            // {
+            //     // the source of the signature allows us to rename the ROM to match the game name - use the game name as the file name if it's not null or empty, otherwise use the original file name
+            //     fileName = Common.ReturnValueIfNull(signature.Rom.Name, fileName).ToString();
 
-                // santise the file name to remove any invalid characters
-                fileName = fileName.Replace(":", " -").Replace("/", "-").Replace("\\", "-").Replace("*", "").Replace("?", "").Replace("\"", "").Replace("<", "").Replace(">", "").Replace("|", "");
+            //     // santise the file name to remove any invalid characters
+            //     fileName = fileName.Replace(":", " -").Replace("/", "-").Replace("\\", "-").Replace("*", "").Replace("?", "").Replace("\"", "").Replace("<", "").Replace(">", "").Replace("|", "");
 
-                // ensure the file name ends with the same extension as the original file
-                fileName = Path.ChangeExtension(fileName, fileExt);
-            }
+            //     // ensure the file name ends with the same extension as the original file
+            //     fileName = Path.ChangeExtension(fileName, fileExt);
+            // }
 
             dbDict.Add("platformid", Common.ReturnValueIfNull(platform.Id, 0));
             dbDict.Add("gameid", 0); // set to 0 - no longer required as game is mapped using the MetadataMapBridge table

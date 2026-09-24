@@ -1,5 +1,3 @@
-using IGDB.Models;
-
 namespace gaseous_server.Classes
 {
     public class Favourites

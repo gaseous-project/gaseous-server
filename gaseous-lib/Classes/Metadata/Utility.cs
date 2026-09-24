@@ -2,7 +2,6 @@ using System.Data;
 using System.Reflection;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 
 namespace gaseous_server.Classes.Metadata.Utility
 {
