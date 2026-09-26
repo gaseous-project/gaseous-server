@@ -900,6 +900,8 @@ namespace gaseous_server.Controllers
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true, bypassTwoFactor: true);
             if (result.Succeeded)
             {
+                var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                await ApplyOidcClaimsAsync(user, info.Principal);
                 return LocalRedirect(returnUrl);
             }
             else
@@ -947,7 +949,7 @@ namespace gaseous_server.Controllers
 
         private async Task ApplyOidcClaimsAsync(ApplicationUser user, ClaimsPrincipal principal)
         {
-            var role = principal.Claims
+            var roleClaim = principal.Claims
                 .Where(claim => claim.Type.Equals("gaseous_role", StringComparison.OrdinalIgnoreCase)
                     || claim.Type.Equals("role", StringComparison.OrdinalIgnoreCase)
                     || claim.Type.Equals("roles", StringComparison.OrdinalIgnoreCase)
@@ -956,15 +958,13 @@ namespace gaseous_server.Controllers
                     || claim.Type.Equals("resource_access", StringComparison.OrdinalIgnoreCase)
                     || claim.Type.Equals(ClaimTypes.Role, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(claim => ExpandClaimValues(claim.Value))
-                .Select(value => value.Trim())
-                .Where(value => value.Equals("Admin", StringComparison.OrdinalIgnoreCase)
-                    || value.Equals("Gamer", StringComparison.OrdinalIgnoreCase)
-                    || value.Equals("Player", StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(value => value.Equals("Admin", StringComparison.OrdinalIgnoreCase) ? 3
-                    : value.Equals("Gamer", StringComparison.OrdinalIgnoreCase) ? 2 : 1)
+                .Select(ParseOidcRoleClaim)
+                .OfType<OidcRoleClaim>()
+                .OrderByDescending(parsedClaim => parsedClaim.Role.Equals("Admin", StringComparison.Ordinal) ? 3
+                    : parsedClaim.Role.Equals("Gamer", StringComparison.Ordinal) ? 2 : 1)
                 .FirstOrDefault();
 
-            if (role != null)
+            if (roleClaim != null)
             {
                 var existingRoles = await _userManager.GetRolesAsync(user);
                 var rolesToRemove = existingRoles.Where(existingRole =>
@@ -972,7 +972,7 @@ namespace gaseous_server.Controllers
                     || existingRole.Equals("Gamer", StringComparison.OrdinalIgnoreCase)
                     || existingRole.Equals("Player", StringComparison.OrdinalIgnoreCase));
                 await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
-                await _userManager.AddToRoleAsync(user, role);
+                await _userManager.AddToRoleAsync(user, roleClaim.Role);
             }
             else if (!await _userManager.IsInRoleAsync(user, "Player")
                 && !await _userManager.IsInRoleAsync(user, "Gamer")
@@ -981,24 +981,56 @@ namespace gaseous_server.Controllers
                 await _userManager.AddToRoleAsync(user, "Player");
             }
 
-            var ageRestriction = principal.FindFirstValue("gaseous_age_restriction");
-            user.SecurityProfile ??= new SecurityProfileViewModel();
-            user.SecurityProfile.AgeRestrictionPolicy ??= new SecurityProfileViewModel.AgeRestrictionItem();
-            if (TryParseAgeRestriction(ageRestriction, out var parsedAgeRestriction))
+            if (roleClaim != null)
             {
-                user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction = parsedAgeRestriction;
-            }
-
-            var includeUnrated = principal.FindFirstValue("gaseous_include_unrated");
-            if (bool.TryParse(includeUnrated, out var parsedIncludeUnrated))
-            {
-                user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated = parsedIncludeUnrated;
-            }
-
-            if (ageRestriction != null || includeUnrated != null)
-            {
+                user.SecurityProfile ??= new SecurityProfileViewModel();
+                user.SecurityProfile.AgeRestrictionPolicy ??= new SecurityProfileViewModel.AgeRestrictionItem();
+                user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction = roleClaim.AgeRestriction;
+                user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated = roleClaim.IncludeUnrated;
                 await _userManager.UpdateAsync(user);
             }
+        }
+
+        private sealed record OidcRoleClaim(
+            string Role,
+            AgeGroups.AgeRestrictionGroupings AgeRestriction,
+            bool IncludeUnrated);
+
+        private static OidcRoleClaim? ParseOidcRoleClaim(string value)
+        {
+            var parts = value.Trim().Split(':');
+            if (parts.Length != 2)
+            {
+                return null;
+            }
+
+            var role = parts[0].Trim().ToLowerInvariant() switch
+            {
+                "player" => "Player",
+                "gamer" => "Gamer",
+                "admin" => "Admin",
+                _ => null
+            };
+
+            var ageValue = parts[1].Trim();
+            var includeUnrated = ageValue.EndsWith("+", StringComparison.Ordinal);
+            if (includeUnrated)
+            {
+                ageValue = ageValue[..^1];
+            }
+
+            var ageRestriction = ageValue.ToLowerInvariant() switch
+            {
+                "child" => AgeGroups.AgeRestrictionGroupings.Child,
+                "teen" => AgeGroups.AgeRestrictionGroupings.Teen,
+                "mature" => AgeGroups.AgeRestrictionGroupings.Mature,
+                "adult" => AgeGroups.AgeRestrictionGroupings.Adult,
+                _ => (AgeGroups.AgeRestrictionGroupings?)null
+            };
+
+            return role == null || ageRestriction == null
+                ? null
+                : new OidcRoleClaim(role, ageRestriction.Value, includeUnrated);
         }
 
         private static IEnumerable<string> ExpandClaimValues(string value)
@@ -1036,32 +1068,6 @@ namespace gaseous_server.Controllers
             }
 
             return Array.Empty<string>();
-        }
-
-        private static bool TryParseAgeRestriction(string? value, out AgeGroups.AgeRestrictionGroupings ageRestriction)
-        {
-            ageRestriction = AgeGroups.AgeRestrictionGroupings.Adult;
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return false;
-            }
-
-            if (Enum.TryParse(value, true, out AgeGroups.AgeRestrictionGroupings namedAgeRestriction)
-                && namedAgeRestriction != AgeGroups.AgeRestrictionGroupings.Unclassified)
-            {
-                ageRestriction = namedAgeRestriction;
-                return true;
-            }
-
-            if (int.TryParse(value, out var numericAgeRestriction)
-                && Enum.IsDefined(typeof(AgeGroups.AgeRestrictionGroupings), numericAgeRestriction)
-                && numericAgeRestriction > 0)
-            {
-                ageRestriction = (AgeGroups.AgeRestrictionGroupings)numericAgeRestriction;
-                return true;
-            }
-
-            return false;
         }
 
         [HttpGet]
