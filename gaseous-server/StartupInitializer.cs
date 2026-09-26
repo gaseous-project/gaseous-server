@@ -34,8 +34,8 @@ namespace gaseous_server
 
                 // DB init and static data
                 await db.InitDB();
-                await Storage.CreateRelationsTables<IGDB.Models.Game>();
-                await Storage.CreateRelationsTables<IGDB.Models.Platform>();
+                await Storage.CreateRelationsTables<HasheousClient.Models.Metadata.IGDB.Game>();
+                await Storage.CreateRelationsTables<HasheousClient.Models.Metadata.IGDB.Platform>();
                 await AgeRatings.PopulateAgeMapAsync();
 
                 // Settings

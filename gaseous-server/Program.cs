@@ -344,8 +344,6 @@ if (Config.SocialAuthConfiguration.OIDCAuthEnabled)
         options.ClaimActions.MapJsonKey("realm_access", "realm_access");      // Keycloak roles
         options.ClaimActions.MapJsonKey("resource_access", "resource_access"); // Keycloak client roles
         options.ClaimActions.MapJsonKey("gaseous_role", "gaseous_role");
-        options.ClaimActions.MapJsonKey("gaseous_age_restriction", "gaseous_age_restriction");
-        options.ClaimActions.MapJsonKey("gaseous_include_unrated", "gaseous_include_unrated");
 
         options.Events = new OpenIdConnectEvents
         {

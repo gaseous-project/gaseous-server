@@ -77,8 +77,8 @@ namespace gaseous_server.Classes
                             Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
                             // create the basic relation tables
                             // this is a blocking task
-                            await Storage.CreateRelationsTables<IGDB.Models.Game>();
-                            await Storage.CreateRelationsTables<IGDB.Models.Platform>();
+                            await Storage.CreateRelationsTables<HasheousClient.Models.Metadata.IGDB.Game>();
+                            await Storage.CreateRelationsTables<HasheousClient.Models.Metadata.IGDB.Platform>();
 
                             // drop source id from all metadata tables if it exists
                             var tablesToDropSourceId = new List<string>
@@ -140,7 +140,7 @@ namespace gaseous_server.Classes
                             Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
 
                             // ensure that the relation tables for games and platforms are built before we attempt to update the database schema
-                            await Storage.CreateRelationsTables<IGDB.Models.Game>();
+                            await Storage.CreateRelationsTables<HasheousClient.Models.Metadata.IGDB.Game>();
 
                             break;
                     }
@@ -668,12 +668,12 @@ namespace gaseous_server.Classes
         {
             public static void BuildTables()
             {
-                Type[] allTypes = typeof(IGDB.Models.Game).Assembly.GetTypes();
+                Type[] allTypes = typeof(HasheousClient.Models.Metadata.IGDB.Game).Assembly.GetTypes();
                 List<Type> modelTypes = new List<Type>();
 
                 foreach (Type type in allTypes)
                 {
-                    if (type.Namespace != "IGDB.Models")
+                    if (type.Namespace != "HasheousClient.Models.Metadata.IGDB")
                     {
                         continue;
                     }

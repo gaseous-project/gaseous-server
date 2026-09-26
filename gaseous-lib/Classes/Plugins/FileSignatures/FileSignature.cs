@@ -328,7 +328,7 @@ namespace gaseous_server.Classes
             /// </summary>
             [System.Text.Json.Serialization.JsonIgnore]
             [Newtonsoft.Json.JsonIgnore]
-            public readonly int MaxMatchCandidates = 3;
+            public readonly int MaxMatchCandidates = 20;
 
             /// <summary>
             /// Gets the top candidate files within the archive that are most likely to be the primary signature match for the overall archive

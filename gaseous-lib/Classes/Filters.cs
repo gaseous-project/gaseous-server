@@ -2,7 +2,6 @@ using System.Data;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 
 namespace gaseous_server.Classes
 {

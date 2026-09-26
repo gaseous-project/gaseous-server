@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
 using gaseous_server.Classes;
-using IGDB.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
