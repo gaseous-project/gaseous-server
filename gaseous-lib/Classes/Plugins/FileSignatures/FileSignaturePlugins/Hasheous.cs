@@ -61,6 +61,8 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                     {
                         if (HasheousResult == null)
                         {
+                            string sourceList = "";
+
                             var body = new List<HasheousClient.Models.HashLookupModel>();
                             if (hash.ArchiveContents == null || hash.ArchiveContents.Count == 0)
                             {
@@ -72,6 +74,8 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                                     SHA256 = hash.Hash.sha256hash,
                                     CRC = hash.Hash.crc32hash
                                 });
+
+                                HasheousResult = await SearchHasheous(sourceList, body);
                             }
                             else
                             {
@@ -86,11 +90,25 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                                         CRC = archiveData.Hash.crc32hash
                                     });
                                 }
+
+                                do
+                                {
+                                    HasheousResult = await SearchHasheous(sourceList, body);
+                                    Console.WriteLine($"Hasheous search attempt returned: {(HasheousResult != null ? "Success" : "No result")}");
+                                    Console.WriteLine($"Hasheous search attempt body count: {body.Count}");
+
+                                    if (HasheousResult != null)
+                                    {
+                                        break;
+                                    }
+
+                                    // half the body count for the next search attempt - keep only the first half
+                                    body = body.Take(body.Count / 2).ToList();
+
+                                    // wait a quarter second
+                                    await Task.Delay(250);
+                                } while (HasheousResult == null && body.Count > 2);
                             }
-
-                            string sourceList = "";
-
-                            HasheousResult = await SearchHasheous(sourceList, body);
 
                             // // if no result, try removing an item from the match candidates list and searching again
                             // // build combinations of match candidates to search for, ensuring a minimum of 2 candidates are included in each search
