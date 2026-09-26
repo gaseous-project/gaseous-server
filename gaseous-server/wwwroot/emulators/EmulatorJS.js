@@ -769,10 +769,10 @@ window.EJS_externalFiles = uploadPaths;
 
 hydrateFilesystemUploadPaths();
 
-// capture save RAM every minute
+// capture save RAM every 10 seconds
 let saveRam = setInterval(async () => {
     await SaveRamCapture();
-}, 30000);
+}, 10000);
 
 async function SaveRamCapture() {
     // check if the emulator is running
