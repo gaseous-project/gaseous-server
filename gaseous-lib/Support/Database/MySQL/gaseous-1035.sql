@@ -6,29 +6,29 @@ ADD KEY idx_GameId_PlatformId (GameId, PlatformId);
 
 ALTER TABLE Games_Roms ADD KEY idx_MetadataMapId (MetadataMapId);
 
-CREATE INDEX idx_Relation_GameModes_GameId_SourceId ON Relation_Game_GameModes (
-    GameId,
-    GameSourceId,
-    GameModesId
-);
+-- CREATE INDEX idx_Relation_GameModes_GameId_SourceId ON Relation_Game_GameModes (
+--     GameId,
+--     GameSourceId,
+--     GameModesId
+-- );
 
-CREATE INDEX idx_Relation_PlayerPerspectives_GameId_SourceId ON Relation_Game_PlayerPerspectives (
-    GameId,
-    GameSourceId,
-    PlayerPerspectivesId
-);
+-- CREATE INDEX idx_Relation_PlayerPerspectives_GameId_SourceId ON Relation_Game_PlayerPerspectives (
+--     GameId,
+--     GameSourceId,
+--     PlayerPerspectivesId
+-- );
 
-CREATE INDEX idx_Relation_Themes_GameId_SourceId ON Relation_Game_Themes (
-    GameId,
-    GameSourceId,
-    ThemesId
-);
+-- CREATE INDEX idx_Relation_Themes_GameId_SourceId ON Relation_Game_Themes (
+--     GameId,
+--     GameSourceId,
+--     ThemesId
+-- );
 
-CREATE INDEX IF NOT EXISTS idx_Relation_Genres_composite ON Relation_Game_Genres (
-    GameId,
-    GameSourceId,
-    GenresId
-);
+-- CREATE INDEX IF NOT EXISTS idx_Relation_Genres_composite ON Relation_Game_Genres (
+--     GameId,
+--     GameSourceId,
+--     GenresId
+-- );
 
 CREATE INDEX idx_Games_Roms_GameId ON Games_Roms (GameId);
 
