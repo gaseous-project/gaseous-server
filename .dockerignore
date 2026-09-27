@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+.gitattributes
+.devcontainer
+.github
+.vscode
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# IDE / editor files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files themselves
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Docs / non-build assets
+README.md
+docs/
+*.md

@@ -7,6 +7,12 @@ EXPOSE 80
 RUN echo "Target: $TARGETARCH"
 RUN echo "Build: $BUILDPLATFORM"
 
+# update apt-get
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists
+
 # Copy everything
 COPY .. ./
 
@@ -22,17 +28,11 @@ RUN bash build/scripts/get-ejs-git.sh
 # Copy the downloaded cores to the output directory
 RUN cp -r gaseous-server/wwwroot/emulators/EmulatorJS out/wwwroot/emulators/
 
-# update apt-get
-RUN apt-get update && apt upgrade -y
-
-# clean up apt-get
-RUN apt-get clean && rm -rf /var/lib/apt/lists
-
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+#FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0
 ENV INDOCKER=1
 WORKDIR /App
-COPY --from=build-env /App/out .
 
 # variables
 ARG PUID=1000
@@ -47,21 +47,24 @@ ENV dbhost=${dbhost}
 ENV dbuser=${dbuser}
 ENV dbpass=${dbpass}
 
-# install supervisord
-RUN apt-get update && apt-get install -y supervisor
+# install dependencies
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y supervisor curl mariadb-client ffmpeg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists
+
+# setup supervisord
 COPY ../build/standard/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN mkdir -p /var/run/supervisord
 RUN mkdir -p /var/log/supervisord
 
-# Install support tools
-RUN apt-get install -y curl mariadb-client ffmpeg
-
-# clean up apt-get
-RUN apt-get clean && rm -rf /var/lib/apt/lists
-
 # copy entrypoint
 COPY ../build/standard/entrypoint.sh /usr/sbin/entrypoint.sh
 RUN chmod +x /usr/sbin/entrypoint.sh
+
+# Copy the built application from the build environment
+COPY --from=build-env /App/out .
 
 # volumes
 VOLUME /home/gaseous/.gaseous-server
