@@ -108,11 +108,11 @@ namespace gaseous_server.Classes
                 new() { SchemaVersion = 1031, CheckName = "Metadata_Game table exists",     Table = "Metadata_Game" },
                 new() { SchemaVersion = 1031, CheckName = "Metadata_Platform table exists", Table = "Metadata_Platform" },
 
-                // --- 1035: Relation_Game_ tables and indexes ---
-                new() { SchemaVersion = 1035, CheckName = "Relation_Game_Genres exists",
-                        Table = "Relation_Game_Genres" },
-                new() { SchemaVersion = 1035, CheckName = "idx_Relation_Genres_composite exists",
-                        Table = "Relation_Game_Genres", Index = "idx_Relation_Genres_composite" },
+                // // --- 1035: Relation_Game_ tables and indexes ---
+                // new() { SchemaVersion = 1035, CheckName = "Relation_Game_Genres exists",
+                //         Table = "Relation_Game_Genres" },
+                // new() { SchemaVersion = 1035, CheckName = "idx_Relation_Genres_composite exists",
+                //         Table = "Relation_Game_Genres", Index = "idx_Relation_Genres_composite" },
 
                 // --- 1036: Metadata_Game.MetadataSource column ---
                 new() { SchemaVersion = 1036, CheckName = "Metadata_Game.MetadataSource exists",
