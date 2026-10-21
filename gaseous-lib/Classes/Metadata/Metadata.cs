@@ -388,6 +388,9 @@ namespace gaseous_server.Classes.Metadata
         /// </exception>
         public static async Task<byte[]?> GetImageAsync(FileSignature.MetadataSources SourceType, long GameId, ImageType imageType, string Url, Plugins.PluginManagement.ImageResize.ImageSize size)
         {
+            // check if there is a semaphore for a Game with this SourceType with the id GameId
+            using var refreshGuard = await ForceRefreshGuard.EnterAsync($"{SourceType}:Game", GameId, true);
+
             var provider = MetadataProviders.FirstOrDefault(x => x.SourceType == SourceType);
             if (provider == null)
             {

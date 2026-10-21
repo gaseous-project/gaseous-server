@@ -389,9 +389,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         Directory.Delete(downloadDirectory, true);
                     }
                     Directory.CreateDirectory(downloadDirectory);
-                    if (!Directory.Exists(bundleTempPath))
+                    if (Directory.Exists(bundleTempPath))
                     {
-                        Directory.CreateDirectory(bundleTempPath);
+                        Directory.Delete(bundleTempPath, true);
                     }
                     Directory.CreateDirectory(bundleTempPath);
                     Dictionary<string, string> headers = new Dictionary<string, string>

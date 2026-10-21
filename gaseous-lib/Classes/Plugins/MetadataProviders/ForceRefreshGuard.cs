@@ -54,7 +54,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// </summary>
         public void MarkCompleted()
         {
-            if (held != null)
+            if (held != null && ForceRefresh)
             {
                 LastRefreshed[key] = DateTime.UtcNow;
             }
