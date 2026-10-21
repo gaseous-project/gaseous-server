@@ -364,7 +364,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 // fetch the bundle - this process will populate/update the database for other supported types
                 try
                 {
-                    var game = await GetGameBundleAsync(id);
+                    var game = await GetGameBundleAsync(id, forceRefresh);
                     metadata = game as T;
                 }
                 catch (Exception ex)
@@ -389,11 +389,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             return null;
         }
 
-        private async Task<Game?> GetGameBundleAsync(long id)
+        private async Task<Game?> GetGameBundleAsync(long id, bool forceRefresh = false)
         {
             // check if bundle exists
             string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, id);
-            bool forceDownloadBundle = false;
+            bool forceDownloadBundle = forceRefresh;
             if (Directory.Exists(bundlePath))
             {
                 // open the Game.json file
