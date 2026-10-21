@@ -301,7 +301,11 @@ namespace gaseous_server.Classes.Metadata
                 if (sourcesToCheck.Contains(metadataProvider.SourceType))
                 {
                     List<long> clearLogoIds = new List<long>();
-                    Game? providerGame = await metadataProvider.GetGameAsync(Id, ForceRefresh);
+                    // Reuse the initial result for its source to avoid fetching the same game twice.
+                    // Other logo sources need their own lookup, with the caller's refresh setting.
+                    Game? providerGame = metadataProvider.SourceType == provider.SourceType
+                        ? game
+                        : await metadataProvider.GetGameAsync(Id, ForceRefresh);
                     if (providerGame != null && providerGame.ClearLogo != null && providerGame.ClearLogo.Count > 0)
                     {
                         clearLogoIds.AddRange(providerGame.ClearLogo);
