@@ -998,7 +998,7 @@ namespace gaseous_server.Controllers
                     await metadataManagement.RefreshSignature(MetadataMapId, ForceRefresh);
 
                     // refresh associated metadata
-                    await metadataManagement.RefreshSpecificGameAsync(MetadataMapId);
+                    await metadataManagement.RefreshSpecificGameAsync(MetadataMapId, ForceRefresh);
                 }
 
                 MetadataMap metadataMap = await Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
