@@ -393,6 +393,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
         {
             // check if bundle exists
             string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, id);
+            string bundleTempPath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, id) + ".tmp";
             bool forceDownloadBundle = forceRefresh;
             if (Directory.Exists(bundlePath))
             {
@@ -424,24 +425,29 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                     Directory.Delete(downloadDirectory, true);
                 }
                 Directory.CreateDirectory(downloadDirectory);
+                if (Directory.Exists(bundleTempPath))
+                {
+                    Directory.Delete(bundleTempPath, true);
+                }
+                Directory.CreateDirectory(bundleTempPath);
                 var response = await comms.DownloadToFileAsync(bundleUrl, downloadedBundlePath, headers);
                 if (response.StatusCode == 200)
                 {
                     // extract the bundle
                     using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
                     {
-                        // delete existing bundle directory if it exists
+                        // extract all files from the zip to the temp bundle directory
+                        foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
+                        {
+                            await entry.WriteToDirectoryAsync(bundleTempPath);
+                        }
+
+                        // move the extracted files from the temp bundle directory to the final bundle directory
                         if (Directory.Exists(bundlePath))
                         {
                             Directory.Delete(bundlePath, true);
                         }
-                        Directory.CreateDirectory(bundlePath);
-
-                        // extract all files from the zip to the bundle directory
-                        foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
-                        {
-                            await entry.WriteToDirectoryAsync(bundlePath);
-                        }
+                        Directory.Move(bundleTempPath, bundlePath);
                     }
                     // delete the temp file
                     try
