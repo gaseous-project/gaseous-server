@@ -75,7 +75,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// <returns>The entity instance or null if not found.</returns>
         public async Task<T?> GetEntityAsync<T>(string itemType, long id) where T : class
         {
-            if (typeof(T) == typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game))
+            return await GetEntityAsync<T>(itemType, id, false);
+        }
+
+        private async Task<T?> GetEntityAsync<T>(string itemType, long id, bool bypassBundle = false) where T : class
+        {
+            if (typeof(T) == typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game) && !bypassBundle)
             {
                 return await GetGameBundleAsync<T>(id);
             }
@@ -262,7 +267,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             await GetGameBundleAsync<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>(gameId);
 
             // we should have a bundle available for the game - attempt to load image from bundle storage
-            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.Name, gameId);
+            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, gameId);
 
             if (Directory.Exists(bundlePath))
             {
@@ -361,7 +366,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         Dictionary<string, object>? gameDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJsonContent);
                         if (gameDict != null)
                         {
-                            // check the updated_at field - if older than 365 days, redownload
+                            // get the current record (database version should be more recent if it's been updated)
+                            Game? currentRecord = await GetEntityAsync<Game>("game", id, true);
+
+                            // check the updated_at field - if it differs from the current record, force download
                             if (gameDict.ContainsKey("updated_at"))
                             {
                                 if (!DateTime.TryParse(gameDict["updated_at"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime updatedAt))
@@ -369,9 +377,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                                     // could not parse date, force download
                                     forceDownloadBundle = true;
                                 }
-                                else if (DateTime.UtcNow.Subtract(updatedAt).TotalDays > 365)
+                                else if (currentRecord != null && (!currentRecord.UpdatedAt.HasValue || Math.Abs(currentRecord.UpdatedAt.Value.Subtract(updatedAt).TotalDays) > 90))
                                 {
-                                    // older than 365 days, force download
+                                    // differs from current record, force download
                                     forceDownloadBundle = true;
                                 }
                                 else
