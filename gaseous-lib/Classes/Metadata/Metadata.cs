@@ -199,6 +199,10 @@ namespace gaseous_server.Classes.Metadata
                 throw new NoMetadataProvidersConfigured();
             }
 
+            // serialize forced refreshes per source/type/id; repeat forced requests within the cool-down are downgraded
+            using var refreshGuard = await ForceRefreshGuard.EnterAsync($"{SourceType}:{typeof(T).Name}", Id, ForceRefresh);
+            ForceRefresh = refreshGuard.ForceRefresh;
+
             try
             {
                 // execute the metadata retrieval command based on T
@@ -258,6 +262,11 @@ namespace gaseous_server.Classes.Metadata
                             }
                         }
                     }
+                }
+
+                if (value != null)
+                {
+                    refreshGuard.MarkCompleted();
                 }
 
                 return value;

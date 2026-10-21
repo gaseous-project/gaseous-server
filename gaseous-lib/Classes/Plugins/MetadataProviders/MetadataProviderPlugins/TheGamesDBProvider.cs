@@ -3,6 +3,7 @@ using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using HasheousClient.Models;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
