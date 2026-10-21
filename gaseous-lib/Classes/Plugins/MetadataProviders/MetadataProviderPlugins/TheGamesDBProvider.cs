@@ -402,15 +402,6 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 {
                     forceDownloadBundle = true;
                 }
-                else
-                {
-                    // check last modified time of the bundle - if it's older than 30 days, we should refresh it
-                    DateTime lastModified = File.GetLastWriteTime(gameJsonPath);
-                    if ((DateTime.UtcNow - lastModified).TotalDays > 30)
-                    {
-                        forceDownloadBundle = true;
-                    }
-                }
             }
             else
             {
