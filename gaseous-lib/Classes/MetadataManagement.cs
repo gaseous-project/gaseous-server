@@ -963,7 +963,6 @@ namespace gaseous_server.Classes
 				inProgressRefreshes.Add(new Dictionary<string, object>()
 				{
 					{ "Id", dr["Id"] },
-					// { "GameIdType", dr["GameIdType"] },
 					{ "Name", dr["Name"] }
 				});
 
@@ -971,7 +970,10 @@ namespace gaseous_server.Classes
 				MetadataMap? metadataMap = await GetMetadataMap((long)dr["Id"]);
 				if (metadataMap != null)
 				{
-					await _RefreshSpecificGame(metadataMap, false);
+					bool forceRefresh = false;
+					
+
+					await _RefreshSpecificGame(metadataMap, forceRefresh);
 				}
 
 				// remove the game from the in progress list

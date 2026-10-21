@@ -356,26 +356,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                     }
                     else
                     {
-                        // load and deserialize the game.json file to Dictionary<string, object>
+                        // load and deserialize the game.json file to verify the json file loads correctly
                         string gameJsonContent = await File.ReadAllTextAsync(gameJsonPath);
                         Dictionary<string, object>? gameDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJsonContent);
                         if (gameDict != null)
                         {
-                            // check the updated_at field - if it differs from the current record, force download
-                            if (gameDict.ContainsKey("updated_at"))
-                            {
-                                if (!DateTime.TryParse(gameDict["updated_at"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime updatedAt))
-                                {
-                                    // could not parse date, force download
-                                    forceDownloadBundle = true;
-                                }
-                                else
-                                {
-                                    // else, do not force download
-                                    forceDownloadBundle = false;
-                                }
-                            }
-                            else
+                            if (!gameDict.ContainsKey("updated_at"))
                             {
                                 forceDownloadBundle = true;
                             }
