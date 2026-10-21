@@ -345,6 +345,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
                 // check if bundle exists
                 string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id);
+                string bundleTempPath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id) + ".tmp";
                 bool forceDownloadBundle = forceDownload;
                 if (Directory.Exists(bundlePath))
                 {
@@ -388,10 +389,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         Directory.Delete(downloadDirectory, true);
                     }
                     Directory.CreateDirectory(downloadDirectory);
-                    if (!Directory.Exists(bundlePath))
+                    if (!Directory.Exists(bundleTempPath))
                     {
-                        Directory.CreateDirectory(bundlePath);
+                        Directory.CreateDirectory(bundleTempPath);
                     }
+                    Directory.CreateDirectory(bundleTempPath);
                     Dictionary<string, string> headers = new Dictionary<string, string>
                 {
                     { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
@@ -402,11 +404,19 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         // extract the bundle
                         using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
                         {
+                            // extract all files from the zip to the temp bundle directory
                             foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
                             {
-                                await entry.WriteToDirectoryAsync(bundlePath);
+                                await entry.WriteToDirectoryAsync(bundleTempPath);
                             }
                         }
+
+                        // move the extracted files from the temp bundle directory to the final bundle directory
+                        if (Directory.Exists(bundlePath))
+                        {
+                            Directory.Delete(bundlePath, true);
+                        }
+                        Directory.Move(bundleTempPath, bundlePath);
 
                         // warm resized image cache variants so image requests avoid first-hit resize cost.
                         await PreGenerateBundleImageCacheAsync(bundlePath, id);

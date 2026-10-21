@@ -441,14 +441,15 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                         {
                             await entry.WriteToDirectoryAsync(bundleTempPath);
                         }
-
-                        // move the extracted files from the temp bundle directory to the final bundle directory
-                        if (Directory.Exists(bundlePath))
-                        {
-                            Directory.Delete(bundlePath, true);
-                        }
-                        Directory.Move(bundleTempPath, bundlePath);
                     }
+
+                    // move the extracted files from the temp bundle directory to the final bundle directory
+                    if (Directory.Exists(bundlePath))
+                    {
+                        Directory.Delete(bundlePath, true);
+                    }
+                    Directory.Move(bundleTempPath, bundlePath);
+
                     // delete the temp file
                     try
                     {
