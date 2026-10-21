@@ -262,7 +262,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             await GetGameBundleAsync<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>(gameId);
 
             // we should have a bundle available for the game - attempt to load image from bundle storage
-            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.Name, gameId);
+            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, gameId);
 
             if (Directory.Exists(bundlePath))
             {
@@ -345,6 +345,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
                 // check if bundle exists
                 string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id);
+                string bundleTempPath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id) + ".tmp";
                 bool forceDownloadBundle = forceDownload;
                 if (Directory.Exists(bundlePath))
                 {
@@ -356,31 +357,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                     }
                     else
                     {
-                        // load and deserialize the game.json file to Dictionary<string, object>
+                        // load and deserialize the game.json file to verify the json file loads correctly
                         string gameJsonContent = await File.ReadAllTextAsync(gameJsonPath);
                         Dictionary<string, object>? gameDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJsonContent);
                         if (gameDict != null)
                         {
-                            // check the updated_at field - if older than 365 days, redownload
-                            if (gameDict.ContainsKey("updated_at"))
-                            {
-                                if (!DateTime.TryParse(gameDict["updated_at"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime updatedAt))
-                                {
-                                    // could not parse date, force download
-                                    forceDownloadBundle = true;
-                                }
-                                else if (DateTime.UtcNow.Subtract(updatedAt).TotalDays > 365)
-                                {
-                                    // older than 365 days, force download
-                                    forceDownloadBundle = true;
-                                }
-                                else
-                                {
-                                    // else, do not force download
-                                    forceDownloadBundle = false;
-                                }
-                            }
-                            else
+                            if (!gameDict.ContainsKey("updated_at"))
                             {
                                 forceDownloadBundle = true;
                             }
@@ -407,10 +389,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         Directory.Delete(downloadDirectory, true);
                     }
                     Directory.CreateDirectory(downloadDirectory);
-                    if (!Directory.Exists(bundlePath))
+                    if (Directory.Exists(bundleTempPath))
                     {
-                        Directory.CreateDirectory(bundlePath);
+                        Directory.Delete(bundleTempPath, true);
                     }
+                    Directory.CreateDirectory(bundleTempPath);
                     Dictionary<string, string> headers = new Dictionary<string, string>
                 {
                     { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
@@ -421,11 +404,19 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         // extract the bundle
                         using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
                         {
+                            // extract all files from the zip to the temp bundle directory
                             foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
                             {
-                                await entry.WriteToDirectoryAsync(bundlePath);
+                                await entry.WriteToDirectoryAsync(bundleTempPath);
                             }
                         }
+
+                        // move the extracted files from the temp bundle directory to the final bundle directory
+                        if (Directory.Exists(bundlePath))
+                        {
+                            Directory.Delete(bundlePath, true);
+                        }
+                        Directory.Move(bundleTempPath, bundlePath);
 
                         // warm resized image cache variants so image requests avoid first-hit resize cost.
                         await PreGenerateBundleImageCacheAsync(bundlePath, id);
