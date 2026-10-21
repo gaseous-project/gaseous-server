@@ -424,16 +424,20 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                     Directory.Delete(downloadDirectory, true);
                 }
                 Directory.CreateDirectory(downloadDirectory);
-                if (!Directory.Exists(bundlePath))
-                {
-                    Directory.CreateDirectory(bundlePath);
-                }
                 var response = await comms.DownloadToFileAsync(bundleUrl, downloadedBundlePath, headers);
                 if (response.StatusCode == 200)
                 {
                     // extract the bundle
                     using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
                     {
+                        // delete existing bundle directory if it exists
+                        if (Directory.Exists(bundlePath))
+                        {
+                            Directory.Delete(bundlePath, true);
+                        }
+                        Directory.CreateDirectory(bundlePath);
+
+                        // extract all files from the zip to the bundle directory
                         foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
                         {
                             await entry.WriteToDirectoryAsync(bundlePath);
