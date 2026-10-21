@@ -199,6 +199,10 @@ namespace gaseous_server.Classes.Metadata
                 throw new NoMetadataProvidersConfigured();
             }
 
+            // serialize forced refreshes per source/type/id; repeat forced requests within the cool-down are downgraded
+            using var refreshGuard = await ForceRefreshGuard.EnterAsync($"{SourceType}:{typeof(T).Name}", Id, ForceRefresh);
+            ForceRefresh = refreshGuard.ForceRefresh;
+
             try
             {
                 // execute the metadata retrieval command based on T
@@ -260,6 +264,11 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
+                if (value != null)
+                {
+                    refreshGuard.MarkCompleted();
+                }
+
                 return value;
             }
             catch (Exception ex)
@@ -301,7 +310,11 @@ namespace gaseous_server.Classes.Metadata
                 if (sourcesToCheck.Contains(metadataProvider.SourceType))
                 {
                     List<long> clearLogoIds = new List<long>();
-                    Game? providerGame = await metadataProvider.GetGameAsync(Id, ForceRefresh);
+                    // Reuse the initial result for its source to avoid fetching the same game twice.
+                    // Other logo sources need their own lookup, with the caller's refresh setting.
+                    Game? providerGame = metadataProvider.SourceType == provider.SourceType
+                        ? game
+                        : await metadataProvider.GetGameAsync(Id, ForceRefresh);
                     if (providerGame != null && providerGame.ClearLogo != null && providerGame.ClearLogo.Count > 0)
                     {
                         clearLogoIds.AddRange(providerGame.ClearLogo);
@@ -375,6 +388,9 @@ namespace gaseous_server.Classes.Metadata
         /// </exception>
         public static async Task<byte[]?> GetImageAsync(FileSignature.MetadataSources SourceType, long GameId, ImageType imageType, string Url, Plugins.PluginManagement.ImageResize.ImageSize size)
         {
+            // check if there is a semaphore for a Game with this SourceType with the id GameId
+            using var refreshGuard = await ForceRefreshGuard.EnterAsync($"{SourceType}:Game", GameId, true);
+
             var provider = MetadataProviders.FirstOrDefault(x => x.SourceType == SourceType);
             if (provider == null)
             {
