@@ -31,6 +31,12 @@ namespace gaseous_server.ProcessQueue.Plugins
                 ParentQueueItem.SubTasks = new List<QueueProcessor.QueueItem.SubTask>();
             }
 
+            bool forceStart = ParentQueueItem.ForceStartRequested;
+            if (forceStart)
+            {
+                Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.force_start_requested_for_game_metadata", null, new[] { ParentQueueItem.ItemType.ToString() });
+            }
+
             // set up metadata refresh subtasks
             _ = ParentQueueItem.AddSubTask(QueueItemSubTasks.MetadataRefresh_Platform, "Platform Metadata", null, true);
             _ = ParentQueueItem.AddSubTask(QueueItemSubTasks.MetadataRefresh_Signatures, "Signature Metadata", null, true);

@@ -174,7 +174,7 @@ namespace gaseous_server.ProcessQueue.Plugins
                             if (metadataMapId != null)
                             {
                                 MetadataManagement metadataManagement = new MetadataManagement();
-                                await metadataManagement.RefreshSpecificGameAsync((long)metadataMapId);
+                                await metadataManagement.RefreshSpecificGameAsync((long)metadataMapId, false);
                             }
                         }
                         ImportGame.UpdateImportState((Guid)ParentSubTaskItem.Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);

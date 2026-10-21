@@ -3,6 +3,7 @@ using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using HasheousClient.Models;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
@@ -364,7 +365,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 // fetch the bundle - this process will populate/update the database for other supported types
                 try
                 {
-                    var game = await GetGameBundleAsync(id);
+                    var game = await GetGameBundleAsync(id, forceRefresh);
                     metadata = game as T;
                 }
                 catch (Exception ex)
@@ -389,11 +390,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             return null;
         }
 
-        private async Task<Game?> GetGameBundleAsync(long id)
+        private async Task<Game?> GetGameBundleAsync(long id, bool forceRefresh = false)
         {
             // check if bundle exists
             string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, id);
-            bool forceDownloadBundle = false;
+            string bundleTempPath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, id) + ".tmp";
+            bool forceDownloadBundle = forceRefresh;
             if (Directory.Exists(bundlePath))
             {
                 // open the Game.json file
@@ -401,15 +403,6 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 if (!File.Exists(gameJsonPath))
                 {
                     forceDownloadBundle = true;
-                }
-                else
-                {
-                    // check last modified time of the bundle - if it's older than 30 days, we should refresh it
-                    DateTime lastModified = File.GetLastWriteTime(gameJsonPath);
-                    if ((DateTime.UtcNow - lastModified).TotalDays > 30)
-                    {
-                        forceDownloadBundle = true;
-                    }
                 }
             }
             else
@@ -433,21 +426,31 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                     Directory.Delete(downloadDirectory, true);
                 }
                 Directory.CreateDirectory(downloadDirectory);
-                if (!Directory.Exists(bundlePath))
+                if (Directory.Exists(bundleTempPath))
                 {
-                    Directory.CreateDirectory(bundlePath);
+                    Directory.Delete(bundleTempPath, true);
                 }
+                Directory.CreateDirectory(bundleTempPath);
                 var response = await comms.DownloadToFileAsync(bundleUrl, downloadedBundlePath, headers);
                 if (response.StatusCode == 200)
                 {
                     // extract the bundle
                     using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
                     {
+                        // extract all files from the zip to the temp bundle directory
                         foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
                         {
-                            await entry.WriteToDirectoryAsync(bundlePath);
+                            await entry.WriteToDirectoryAsync(bundleTempPath);
                         }
                     }
+
+                    // move the extracted files from the temp bundle directory to the final bundle directory
+                    if (Directory.Exists(bundlePath))
+                    {
+                        Directory.Delete(bundlePath, true);
+                    }
+                    Directory.Move(bundleTempPath, bundlePath);
+
                     // delete the temp file
                     try
                     {

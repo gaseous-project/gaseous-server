@@ -75,12 +75,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// <returns>The entity instance or null if not found.</returns>
         public async Task<T?> GetEntityAsync<T>(string itemType, long id) where T : class
         {
-            return await GetEntityAsync<T>(itemType, id, false);
-        }
-
-        private async Task<T?> GetEntityAsync<T>(string itemType, long id, bool bypassBundle = false) where T : class
-        {
-            if (typeof(T) == typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game) && !bypassBundle)
+            if (typeof(T) == typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game))
             {
                 return await GetGameBundleAsync<T>(id);
             }
@@ -350,6 +345,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
                 // check if bundle exists
                 string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id);
+                string bundleTempPath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id) + ".tmp";
                 bool forceDownloadBundle = forceDownload;
                 if (Directory.Exists(bundlePath))
                 {
@@ -361,34 +357,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                     }
                     else
                     {
-                        // load and deserialize the game.json file to Dictionary<string, object>
+                        // load and deserialize the game.json file to verify the json file loads correctly
                         string gameJsonContent = await File.ReadAllTextAsync(gameJsonPath);
                         Dictionary<string, object>? gameDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJsonContent);
                         if (gameDict != null)
                         {
-                            // get the current record (database version should be more recent if it's been updated)
-                            Game? currentRecord = await GetEntityAsync<Game>("game", id, true);
-
-                            // check the updated_at field - if it differs from the current record, force download
-                            if (gameDict.ContainsKey("updated_at"))
-                            {
-                                if (!DateTime.TryParse(gameDict["updated_at"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime updatedAt))
-                                {
-                                    // could not parse date, force download
-                                    forceDownloadBundle = true;
-                                }
-                                else if (currentRecord != null && (!currentRecord.UpdatedAt.HasValue || Math.Abs(currentRecord.UpdatedAt.Value.Subtract(updatedAt).TotalDays) > 90))
-                                {
-                                    // differs from current record, force download
-                                    forceDownloadBundle = true;
-                                }
-                                else
-                                {
-                                    // else, do not force download
-                                    forceDownloadBundle = false;
-                                }
-                            }
-                            else
+                            if (!gameDict.ContainsKey("updated_at"))
                             {
                                 forceDownloadBundle = true;
                             }
@@ -415,10 +389,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         Directory.Delete(downloadDirectory, true);
                     }
                     Directory.CreateDirectory(downloadDirectory);
-                    if (!Directory.Exists(bundlePath))
+                    if (Directory.Exists(bundleTempPath))
                     {
-                        Directory.CreateDirectory(bundlePath);
+                        Directory.Delete(bundleTempPath, true);
                     }
+                    Directory.CreateDirectory(bundleTempPath);
                     Dictionary<string, string> headers = new Dictionary<string, string>
                 {
                     { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
@@ -429,11 +404,19 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         // extract the bundle
                         using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
                         {
+                            // extract all files from the zip to the temp bundle directory
                             foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
                             {
-                                await entry.WriteToDirectoryAsync(bundlePath);
+                                await entry.WriteToDirectoryAsync(bundleTempPath);
                             }
                         }
+
+                        // move the extracted files from the temp bundle directory to the final bundle directory
+                        if (Directory.Exists(bundlePath))
+                        {
+                            Directory.Delete(bundlePath, true);
+                        }
+                        Directory.Move(bundleTempPath, bundlePath);
 
                         // warm resized image cache variants so image requests avoid first-hit resize cost.
                         await PreGenerateBundleImageCacheAsync(bundlePath, id);

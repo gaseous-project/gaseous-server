@@ -938,7 +938,7 @@ namespace gaseous_server.Classes
 		}
 
 		static List<Dictionary<string, object>> inProgressRefreshes = new List<Dictionary<string, object>>();
-		public async Task RefreshSpecificGameAsync(long metadataMapId)
+		public async Task RefreshSpecificGameAsync(long metadataMapId, bool forceRefresh)
 		{
 			// get the metadata map for the game
 			string sql = @"
@@ -963,7 +963,6 @@ namespace gaseous_server.Classes
 				inProgressRefreshes.Add(new Dictionary<string, object>()
 				{
 					{ "Id", dr["Id"] },
-					// { "GameIdType", dr["GameIdType"] },
 					{ "Name", dr["Name"] }
 				});
 
@@ -971,7 +970,7 @@ namespace gaseous_server.Classes
 				MetadataMap? metadataMap = await GetMetadataMap((long)dr["Id"]);
 				if (metadataMap != null)
 				{
-					await _RefreshSpecificGame(metadataMap, false);
+					await _RefreshSpecificGame(metadataMap, forceRefresh);
 				}
 
 				// remove the game from the in progress list
