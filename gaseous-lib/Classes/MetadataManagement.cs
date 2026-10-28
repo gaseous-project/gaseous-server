@@ -566,7 +566,12 @@ namespace gaseous_server.Classes
 
 			string preferredSql = preferred ? "AND Preferred = @preferred" : "";
 
-			sql = "SELECT * FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND NULLIF(MetadataSourceId, -1) = @sourceId " + preferredSql + ";";
+			if (sourceId == -1)
+			{
+				return null;
+			}
+
+			sql = "SELECT ParentMapId FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND MetadataSourceId = @sourceId " + preferredSql + " LIMIT 1;";
 			dt = db.ExecuteCMD(sql, dbDict);
 
 			if (dt.Rows.Count > 0)
@@ -601,7 +606,8 @@ namespace gaseous_server.Classes
 				{ "@metadataMapId", metadataMapId }
 			};
 
-			sql = "SELECT `M1`.`Id` AS `Id` FROM `view_MetadataMap` `M` JOIN `view_MetadataMap` `M1` ON NULLIF(`M`.`MetadataSourceId`, -1) = NULLIF(`M1`.`MetadataSourceId`, -1) WHERE `M`.`Id` = @metadataMapId; ";
+			// join the bridge table directly so idx_MetadataPreferredSource can be used (the view + NULLIF forced a nested-loop scan)
+			sql = "SELECT DISTINCT `B1`.`ParentMapId` AS `Id` FROM `MetadataMapBridge` `B` JOIN `MetadataMapBridge` `B1` ON `B1`.`MetadataSourceId` = `B`.`MetadataSourceId` AND `B1`.`Preferred` = 1 WHERE `B`.`ParentMapId` = @metadataMapId AND `B`.`Preferred` = 1 AND `B`.`MetadataSourceId` <> -1;";
 			DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			List<long> metadataMapIds = new List<long>();
