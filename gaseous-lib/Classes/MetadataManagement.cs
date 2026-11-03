@@ -627,26 +627,7 @@ namespace gaseous_server.Classes
 		}
 
 		Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-		public async Task RefreshMetadata(bool forceRefresh = false)
-		{
-			// removed unused local variables sql/dt
-
-			// disabling forceRefresh
-			forceRefresh = false;
-
-			// refresh platforms
-			await RefreshPlatforms(forceRefresh);
-
-			// refresh signatures
-			await RefreshSignatures(forceRefresh);
-
-			// update the rom counts
-			UpdateRomCounts();
-
-			// refresh games
-			await RefreshGames(forceRefresh);
-		}
-
+		
 		public async Task RefreshPlatforms(bool forceRefresh = false)
 		{
 			FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
@@ -1054,6 +1035,9 @@ namespace gaseous_server.Classes
 								}
 							}
 						}
+
+						// refresh age group metadata for the game
+						await Metadata.AgeGroups.GetAgeGroup(game, forceRefresh);
 					}
 					if (game.AlternativeNames != null)
 					{

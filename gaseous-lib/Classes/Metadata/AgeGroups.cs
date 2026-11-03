@@ -16,7 +16,7 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
-        public static async Task<AgeGroup?> GetAgeGroup(Game? game)
+        public static async Task<AgeGroup?> GetAgeGroup(Game? game, bool forceRefresh = false)
         {
             if (game == null)
             {
@@ -30,23 +30,17 @@ namespace gaseous_server.Classes.Metadata
 
                 AgeGroup? RetVal = new AgeGroup();
 
-                switch (cacheStatus)
+                if (cacheStatus == Storage.CacheStatus.NotPresent || forceRefresh)
                 {
-                    case Storage.CacheStatus.NotPresent:
-                        RetVal = await _GetAgeGroup(game);
-                        if (RetVal != null)
-                        {
-                            await Storage.StoreCacheValue<AgeGroup>(RetVal);
-                        }
-                        break;
-
-                    case Storage.CacheStatus.Current:
-                    case Storage.CacheStatus.Expired:
-                        RetVal = await Storage.GetCacheValue<AgeGroup>(RetVal, "Id", game.Id);
-                        break;
-
-                    default:
-                        throw new InvalidOperationException("Unexpected cache status encountered in GetAgeGroup.");
+                    RetVal = await _GetAgeGroup(game);
+                    if (RetVal != null)
+                    {
+                        await Storage.StoreCacheValue<AgeGroup>(RetVal);
+                    }
+                }
+                else
+                {
+                    RetVal = await Storage.GetCacheValue<AgeGroup>(RetVal, "Id", game.Id);
                 }
 
                 return RetVal;

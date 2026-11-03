@@ -160,10 +160,10 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // populate age group data
-            if (result.MetadataSource == FileSignature.MetadataSources.IGDB)
-            {
-                await AgeGroups.GetAgeGroup(result);
-            }
+            // if (result.MetadataSource == FileSignature.MetadataSources.IGDB)
+            // {
+            await AgeGroups.GetAgeGroup(result);
+            // }
 
             return result;
         }
