@@ -449,8 +449,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             // check storage first
             List<Storage.CacheStatus> forceLoadStatuses = new List<Storage.CacheStatus>
             {
-                Storage.CacheStatus.NotPresent,
-                Storage.CacheStatus.Expired
+                Storage.CacheStatus.NotPresent
             };
 
             T? metadata = Activator.CreateInstance(typeof(T)) as T;

@@ -33,7 +33,6 @@ namespace gaseous_server.Classes.Metadata
                 switch (cacheStatus)
                 {
                     case Storage.CacheStatus.NotPresent:
-                    case Storage.CacheStatus.Expired:
                         RetVal = await _GetAgeGroup(game);
                         if (RetVal != null)
                         {
@@ -42,6 +41,7 @@ namespace gaseous_server.Classes.Metadata
                         break;
 
                     case Storage.CacheStatus.Current:
+                    case Storage.CacheStatus.Expired:
                         RetVal = await Storage.GetCacheValue<AgeGroup>(RetVal, "Id", game.Id);
                         break;
 
