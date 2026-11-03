@@ -28,6 +28,7 @@ namespace gaseous_server.Controllers.v1_1
     [ApiVersion("1.1")]
     [ApiController]
     [Authorize]
+    [ServiceFilter(typeof(AgeEnforcementAttribute))]
     public class GamesController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;

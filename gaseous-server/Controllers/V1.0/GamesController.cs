@@ -27,6 +27,7 @@ namespace gaseous_server.Controllers
     [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [Authorize]
+    [ServiceFilter(typeof(AgeEnforcementAttribute))]
     [ApiController]
     public class GamesController : Controller
     {
@@ -1447,6 +1448,10 @@ namespace gaseous_server.Controllers
             {
                 Classes.Roms.GameRomItem rom = await Classes.Roms.GetRom(RomId);
                 if (rom == null)
+                {
+                    return NotFound();
+                }
+                if (rom.MetadataMapId != MetadataMapId)
                 {
                     return NotFound();
                 }

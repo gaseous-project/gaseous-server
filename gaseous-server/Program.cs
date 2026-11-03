@@ -258,6 +258,7 @@ builder.Services.ConfigureExternalCookie(options =>
 });
 builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<RoleStore>();
+builder.Services.AddScoped<AgeEnforcementAttribute>();
 
 builder.Services.AddTransient<IUserStore<ApplicationUser>, UserStore>();
 builder.Services.AddTransient<IRoleStore<ApplicationRole>, RoleStore>();
