@@ -902,6 +902,9 @@ namespace gaseous_server.Classes
 
 		public async Task RefreshGames(bool forceRefresh = false)
 		{
+			// the scheduled refresh is the only place expired content is allowed to be refreshed from remote sources
+			using var refreshExpiredScope = gaseous_server.Classes.Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired();
+
 			string sql = "";
 
 			// update game metadata
@@ -1152,7 +1155,15 @@ namespace gaseous_server.Classes
 			{
 				if (item.SourceId != null)
 				{
-					await hasheousProxy.EnsureGameBundleAsync((long)item.SourceId, forceRefresh);
+					bool forceDownload = forceRefresh;
+					if (!forceDownload && gaseous_server.Classes.Plugins.MetadataProviders.MetadataRefreshScope.RefreshExpired)
+					{
+						// the bundle is only re-downloaded when the stored game has expired
+						var storage = new gaseous_server.Classes.Plugins.MetadataProviders.Storage(item.SourceType);
+						forceDownload = await storage.GetCacheStatusAsync("Game", (long)item.SourceId) == gaseous_server.Classes.Plugins.MetadataProviders.Storage.CacheStatus.Expired;
+					}
+
+					await hasheousProxy.EnsureGameBundleAsync((long)item.SourceId, forceDownload);
 				}
 			}
 		}

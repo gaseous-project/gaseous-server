@@ -30,7 +30,9 @@ namespace gaseous_server.Classes.Metadata
 
                 AgeGroup? RetVal = new AgeGroup();
 
-                if (cacheStatus == Storage.CacheStatus.NotPresent || forceRefresh)
+                // expired age groups are only recalculated by the background refresh process
+                bool refreshExpired = cacheStatus == Storage.CacheStatus.Expired && gaseous_server.Classes.Plugins.MetadataProviders.MetadataRefreshScope.RefreshExpired;
+                if (cacheStatus == Storage.CacheStatus.NotPresent || forceRefresh || refreshExpired)
                 {
                     RetVal = await _GetAgeGroup(game);
                     if (RetVal != null)

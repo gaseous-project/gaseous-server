@@ -349,7 +349,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             // get content from database - if not present fetch it from the server, but only if T is Game
             var typeName = typeof(T).Name;
             var cacheStatus = await Storage.GetCacheStatusAsync(typeName, id);
-            if (forceLoadStatuses.Contains(cacheStatus) || forceRefresh)
+
+            // expired content is only refreshed by the background refresh process - bundles are only available for games
+            bool refreshExpired = cacheStatus == Storage.CacheStatus.Expired && MetadataRefreshScope.RefreshExpired && typeof(T) == typeof(Game);
+            if (forceLoadStatuses.Contains(cacheStatus) || forceRefresh || refreshExpired)
             {
                 // fetch from server
                 // if T is not game return null
@@ -361,7 +364,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 // fetch the bundle - this process will populate/update the database for other supported types
                 try
                 {
-                    var game = await GetGameBundleAsync(id, forceRefresh);
+                    var game = await GetGameBundleAsync(id, forceRefresh || refreshExpired);
                     metadata = game as T;
                 }
                 catch (Exception ex)
@@ -479,7 +482,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             {
                 Directory.CreateDirectory(Config.LibraryConfiguration.LibraryMetadataDirectory_TheGamesDB());
             }
-            if (!File.Exists(genresJsonFilePath) || (DateTime.UtcNow - File.GetLastWriteTime(genresJsonFilePath)).TotalDays > 30)
+            if (!File.Exists(genresJsonFilePath) || (MetadataRefreshScope.RefreshExpired && (DateTime.UtcNow - File.GetLastWriteTime(genresJsonFilePath)).TotalDays > 30))
             {
                 Uri genresUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/TheGamesDB/Genres");
                 var genresResponse = await comms.SendRequestAsync<Dictionary<string, object>>(HTTPComms.HttpMethod.GET, genresUrl, headers);

@@ -457,7 +457,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             string typeName = typeof(T).Name;
 
             var cacheStatus = await Storage.GetCacheStatusAsync(typeName, id);
-            if (forceLoadStatuses.Contains(cacheStatus) || forceRefresh)
+
+            // expired content is only refreshed by the background refresh process
+            bool refreshExpired = cacheStatus == Storage.CacheStatus.Expired && MetadataRefreshScope.RefreshExpired;
+            if (forceLoadStatuses.Contains(cacheStatus) || forceRefresh || refreshExpired)
             {
                 try
                 {
