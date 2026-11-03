@@ -332,6 +332,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             return null;
         }
 
+        private static List<Storage.CacheStatus> forceLoadStatuses = new List<Storage.CacheStatus>
+        {
+            Storage.CacheStatus.NotPresent
+        };
+
         private async Task<T?> GetEntityAsync<T>(long id, bool forceRefresh = false) where T : class
         {
             if (id == 0)
@@ -340,12 +345,6 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             }
 
             T? metadata = Activator.CreateInstance(typeof(T)) as T;
-
-            // check storage first
-            List<Storage.CacheStatus> forceLoadStatuses = new List<Storage.CacheStatus>
-            {
-                Storage.CacheStatus.NotPresent
-            };
 
             // get content from database - if not present fetch it from the server, but only if T is Game
             var typeName = typeof(T).Name;

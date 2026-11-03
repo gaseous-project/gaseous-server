@@ -431,6 +431,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             return null;
         }
 
+        private static List<Storage.CacheStatus> forceLoadStatuses = new List<Storage.CacheStatus>
+        {
+            Storage.CacheStatus.NotPresent
+        };
+
         /// <summary>
         /// Generic method to get an entity by endpoint and ID.
         /// </summary>
@@ -445,12 +450,6 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             {
                 return null;
             }
-
-            // check storage first
-            List<Storage.CacheStatus> forceLoadStatuses = new List<Storage.CacheStatus>
-            {
-                Storage.CacheStatus.NotPresent
-            };
 
             T? metadata = Activator.CreateInstance(typeof(T)) as T;
 
