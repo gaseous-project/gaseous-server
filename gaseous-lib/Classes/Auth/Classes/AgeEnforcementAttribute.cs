@@ -94,17 +94,16 @@ namespace gaseous_server.Classes
             {
                 return false;
             }
-            var gameData = await Metadata.Games.GetGame(mapData.PreferredMetadataMapItem.SourceType, mapData.PreferredMetadataMapItem.SourceId, false, false);
-            var gameAgeRestriction = await Metadata.AgeGroups.GetAgeGroup(gameData);
+            var ageGroup = await Metadata.AgeGroups.GetMapAgeGroupAsync(objectId);
 
             // check for IncludeUnrated
-            if (user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated && gameAgeRestriction.AgeGroupId == null)
+            if (user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated && ageGroup == null)
             {
                 return true;
             }
 
             // check if user's age restriction allows access to this game's age group
-            if (gameAgeRestriction.AgeGroupId <= user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction)
+            if (ageGroup != null && ageGroup <= user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction)
             {
                 return true;
             }

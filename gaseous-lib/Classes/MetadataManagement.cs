@@ -630,6 +630,8 @@ namespace gaseous_server.Classes
 		
 		public async Task RefreshPlatforms(bool forceRefresh = false)
 		{
+			using var refreshExpiredScope = Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired();
+
 			FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
 
 			// update platform metadata
@@ -650,7 +652,7 @@ namespace gaseous_server.Classes
 					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_platform", null, new string[] { StatusCounter.ToString(), dt.Rows.Count.ToString(), dr["name"].ToString(), dr["id"].ToString() });
 
 					// fetch the platform metadata
-					Platform? platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource, true);
+					Platform? platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource, forceRefresh);
 
 					// fetch the platform metadata from Hasheous
 					if ((long)dr["id"] != 0)
@@ -665,6 +667,14 @@ namespace gaseous_server.Classes
 						// set the platform to unknown
 						sql = "UPDATE Metadata_Platform SET Name = 'Unknown Platform', Slug = 'unknown', PlatformLogo = 0 WHERE Id = 0;";
 						await db.ExecuteCMDAsync(sql);
+					}
+
+					if (platform?.Versions != null)
+					{
+						foreach (long platformVersionId in platform.Versions)
+						{
+							await Metadata.PlatformVersions.GetPlatformVersion(metadataSource, platformVersionId);
+						}
 					}
 
 					// force platformLogo refresh
@@ -930,6 +940,8 @@ namespace gaseous_server.Classes
 		static List<Dictionary<string, object>> inProgressRefreshes = new List<Dictionary<string, object>>();
 		public async Task RefreshSpecificGameAsync(long metadataMapId, bool forceRefresh)
 		{
+			using var refreshExpiredScope = Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired();
+
 			// get the metadata map for the game
 			string sql = @"
 			SELECT DISTINCT `Id`, SignatureGameName AS `Name` FROM gaseous.view_MetadataMap WHERE `Id` = @metadataMapId;
@@ -1039,8 +1051,6 @@ namespace gaseous_server.Classes
 							}
 						}
 
-						// refresh age group metadata for the game
-						await Metadata.AgeGroups.GetAgeGroup(game, forceRefresh);
 					}
 					if (game.AlternativeNames != null)
 					{
@@ -1139,8 +1149,51 @@ namespace gaseous_server.Classes
 							await Metadata.Themes.GetGame_ThemesAsync(item.SourceType, themeId);
 						}
 					}
+					if (game.Collections != null)
+					{
+						foreach (long collectionId in game.Collections)
+						{
+							await Metadata.Collections.GetCollections(item.SourceType, collectionId);
+						}
+					}
+					if (game.Franchise != null)
+					{
+						await Metadata.Franchises.GetFranchises(item.SourceType, (long?)game.Franchise);
+					}
+					if (game.Franchises != null)
+					{
+						foreach (long franchiseId in game.Franchises)
+						{
+							await Metadata.Franchises.GetFranchises(item.SourceType, franchiseId);
+						}
+					}
+					if (game.ExternalGames != null)
+					{
+						foreach (long externalGameId in game.ExternalGames)
+						{
+							await Metadata.ExternalGames.GetExternalGames(item.SourceType, externalGameId);
+						}
+					}
+					if (game.InvolvedCompanies != null)
+					{
+						foreach (long involvedCompanyId in game.InvolvedCompanies)
+						{
+							InvolvedCompany? involvedCompany = await Metadata.InvolvedCompanies.GetInvolvedCompanies(item.SourceType, involvedCompanyId);
+							if (involvedCompany?.Company != null)
+							{
+								Company? company = await Metadata.Companies.GetCompanies(item.SourceType, (long?)involvedCompany.Company);
+								if (company?.Logo != null)
+								{
+									await Metadata.CompanyLogos.GetCompanyLogo(item.SourceType, (long?)company.Logo, "");
+								}
+							}
+						}
+					}
 				}
 			}
+
+			// the age group spans every source of the map, so it is calculated once all sources are refreshed
+			await Metadata.AgeGroups.RefreshMapAgeGroupAsync(metadataItem.Id);
 		}
 
 		private static async Task EnsureBundleForMetadataRefresh(MetadataMap.MetadataMapItem item, bool forceRefresh)

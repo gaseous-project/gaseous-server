@@ -6,6 +6,7 @@ using gaseous_server.Models;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.CodeAnalysis.Classification;
 using gaseous_server.Classes.Plugins.MetadataProviders;
+using System.Data;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -16,99 +17,95 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
-        public static async Task<AgeGroup?> GetAgeGroup(Game? game, bool forceRefresh = false)
+        /// <summary>
+        /// Gets the source-agnostic age group for a metadata map. Request paths only read the stored value;
+        /// if none has been calculated yet it is derived once from locally stored metadata (never downloaded).
+        /// </summary>
+        /// <returns>The age group, or null when the map is unrated or nothing is stored locally.</returns>
+        public static async Task<AgeRestrictionGroupings?> GetMapAgeGroupAsync(long metadataMapId)
         {
-            if (game == null)
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            DataTable dt = await db.ExecuteCMDAsync(
+                "SELECT AgeGroupId FROM MetadataMapAgeGroup WHERE MetadataMapId = @id;",
+                new Dictionary<string, object> { { "id", metadataMapId } },
+                new DatabaseMemoryCacheOptions(CacheEnabled: false));
+            if (dt.Rows.Count > 0)
+            {
+                return dt.Rows[0]["AgeGroupId"] == DBNull.Value ? null : (AgeRestrictionGroupings)Convert.ToInt32(dt.Rows[0]["AgeGroupId"]);
+            }
+
+            return await RefreshMapAgeGroupAsync(metadataMapId);
+        }
+
+        /// <summary>
+        /// Recalculates and stores the age group of a metadata map as the highest age group across the age ratings
+        /// of every source attached to it. Only locally stored metadata is used. Intended for the metadata refresh process.
+        /// </summary>
+        public static async Task<AgeRestrictionGroupings?> RefreshMapAgeGroupAsync(long metadataMapId)
+        {
+            MetadataMap? map = await MetadataManagement.GetMetadataMap(metadataMapId);
+            if (map?.MetadataMapItems == null)
             {
                 return null;
             }
-            else
+
+            bool foundLocalGame = false;
+            List<AgeRating> ageRatings = new List<AgeRating>();
+            foreach (MetadataMap.MetadataMapItem item in map.MetadataMapItems)
             {
-                gaseous_server.Classes.Plugins.MetadataProviders.Storage Storage = new gaseous_server.Classes.Plugins.MetadataProviders.Storage(game.MetadataSource);
-
-                Storage.CacheStatus? cacheStatus = await Storage.GetCacheStatusAsync("AgeGroup", (long)game.Id);
-
-                AgeGroup? RetVal = new AgeGroup();
-
-                // expired age groups are only recalculated by the background refresh process
-                bool refreshExpired = cacheStatus == Storage.CacheStatus.Expired && gaseous_server.Classes.Plugins.MetadataProviders.MetadataRefreshScope.RefreshExpired;
-                if (cacheStatus == Storage.CacheStatus.NotPresent || forceRefresh || refreshExpired)
+                if (item.SourceId == null || item.SourceId <= 0)
                 {
-                    RetVal = await _GetAgeGroup(game);
-                    if (RetVal != null)
-                    {
-                        await Storage.StoreCacheValue<AgeGroup>(RetVal);
-                    }
-                }
-                else
-                {
-                    RetVal = await Storage.GetCacheValue<AgeGroup>(RetVal, "Id", game.Id);
+                    continue;
                 }
 
-                return RetVal;
-            }
-        }
-
-        public static async Task<AgeGroup?> _GetAgeGroup(Game game)
-        {
-            // compile the maximum age group for the given game
-            if (game != null)
-            {
-                if (game.AgeRatings != null)
+                Storage storage = new Storage(item.SourceType);
+                if (await storage.GetCacheStatusAsync("Game", (long)item.SourceId) == Storage.CacheStatus.NotPresent)
                 {
-                    if (game.AgeRatings != null)
-                    {
-                        // collect ratings values from metadata
-                        List<AgeRating> ageRatings = new List<AgeRating>();
-                        foreach (long ratingId in game.AgeRatings)
-                        {
-                            AgeRating? rating = await AgeRatings.GetAgeRating(game.MetadataSource, ratingId);
-                            if (rating != null)
-                            {
-                                ageRatings.Add(rating);
-                            }
-                        }
-
-                        // compile the ratings values into the ratings groups
-                        AgeRestrictionGroupings highestAgeGroup = GetAgeGroupFromAgeRatings(ageRatings);
-
-                        // return the compiled ratings group
-                        AgeGroup ageGroup = new AgeGroup();
-                        ageGroup.Id = game.Id;
-                        ageGroup.GameId = game.Id;
-                        if (highestAgeGroup == 0)
-                        {
-                            ageGroup.AgeGroupId = null;
-                        }
-                        else
-                        {
-                            ageGroup.AgeGroupId = highestAgeGroup;
-                        }
-
-                        return ageGroup;
-                    }
-                    else
-                    {
-                        AgeGroup ageGroup = new AgeGroup();
-                        ageGroup.Id = game.Id;
-                        ageGroup.GameId = game.Id;
-                        ageGroup.AgeGroupId = null;
-
-                        return ageGroup;
-                    }
+                    continue;
                 }
-                else
-                {
-                    AgeGroup ageGroup = new AgeGroup();
-                    ageGroup.Id = game.Id;
-                    ageGroup.GameId = game.Id;
-                    ageGroup.AgeGroupId = null;
 
-                    return ageGroup;
+                Game? game = await storage.GetCacheValue<Game>(new Game(), "Id", (long)item.SourceId);
+                if (game == null)
+                {
+                    continue;
+                }
+                foundLocalGame = true;
+
+                if (game.AgeRatings == null)
+                {
+                    continue;
+                }
+                foreach (long ratingId in game.AgeRatings)
+                {
+                    if (await storage.GetCacheStatusAsync("AgeRating", ratingId) == Storage.CacheStatus.NotPresent)
+                    {
+                        continue;
+                    }
+                    AgeRating? rating = await storage.GetCacheValue<AgeRating>(new AgeRating(), "Id", ratingId);
+                    if (rating != null)
+                    {
+                        ageRatings.Add(rating);
+                    }
                 }
             }
 
-            return null;
+            // nothing stored locally yet: don't persist a result that would hide the real value later
+            if (!foundLocalGame)
+            {
+                return null;
+            }
+
+            AgeRestrictionGroupings highest = GetAgeGroupFromAgeRatings(ageRatings);
+            AgeRestrictionGroupings? result = highest == AgeRestrictionGroupings.Unclassified ? null : highest;
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            await db.ExecuteCMDAsync(
+                @"INSERT INTO MetadataMapAgeGroup (MetadataMapId, AgeGroupId) VALUES (@id, @age)
+                  ON DUPLICATE KEY UPDATE AgeGroupId = @age, lastUpdated = CURRENT_TIMESTAMP;",
+                new Dictionary<string, object> { { "id", metadataMapId }, { "age", result == null ? DBNull.Value : (int)result } },
+                new DatabaseMemoryCacheOptions(CacheEnabled: false));
+
+            return result;
         }
 
         /// <summary>

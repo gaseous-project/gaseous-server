@@ -833,7 +833,7 @@ namespace gaseous_server.Controllers.v1_1
                 var sb = new System.Text.StringBuilder("(");
                 if (model.GameAgeRating.AgeGroupings.Count > 0)
                 {
-                    sb.Append("Game.AgeGroupId IN (");
+                    sb.Append("MapAgeGroup.AgeGroupId IN (");
                     for (int i = 0; i < model.GameAgeRating.AgeGroupings.Count; i++)
                     {
                         if (i > 0)
@@ -853,7 +853,7 @@ namespace gaseous_server.Controllers.v1_1
                     {
                         sb.Append(" OR ");
                     }
-                    sb.Append("Game.AgeGroupId IS NULL");
+                    sb.Append("MapAgeGroup.AgeGroupId IS NULL");
                 }
                 sb.Append(')');
                 whereClauses.Add(sb.ToString());
@@ -941,7 +941,7 @@ namespace gaseous_server.Controllers.v1_1
     MAX(IFNULL(`RomGroupStats`.`RomGroupSavedStates`, 0)) AS `RomGroupSavedStates`,
     MAX(IFNULL(`RomSaveStats`.`RomSavedFiles`, 0)) AS `RomSavedFiles`,
     MAX(IFNULL(`RomGroupStats`.`RomGroupSavedFiles`, 0)) AS `RomGroupSavedFiles`,
-    `Game`.`AgeGroupId`,
+    MAX(`MapAgeGroup`.`AgeGroupId`) AS `AgeGroupId`,
     CASE
         WHEN `LocalizedNames`.`Name` IS NOT NULL THEN `LocalizedNames`.`Name`
         WHEN `Game`.`Name` IS NULL THEN `MetadataMap`.`SignatureGameName`
@@ -1037,6 +1037,8 @@ FROM
         LEFT JOIN
     `Metadata_Game` AS `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
         AND NULLIF(`MetadataMapBridge`.`MetadataSourceId`, -1) = `Game`.`Id`
+LEFT JOIN
+    `MetadataMapAgeGroup` AS `MapAgeGroup` ON `MapAgeGroup`.`MetadataMapId` = `MetadataMap`.`Id`
         LEFT JOIN
     `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game`
         AND `Game`.`SourceId` = `AlternativeName`.`SourceId`

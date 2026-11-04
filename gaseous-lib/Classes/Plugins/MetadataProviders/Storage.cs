@@ -238,30 +238,6 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         }
                     }
 
-                    // get the age group classification for the game based on its age ratings
-                    List<AgeRating>? ageRatings = new List<AgeRating>();
-                    if (gameObject.AgeRatings != null)
-                    {
-                        foreach (var ageRatingId in gameObject.AgeRatings)
-                        {
-                            AgeRating? ageRating = await provider.GetAgeRatingAsync(ageRatingId, false);
-                            if (ageRating != null)
-                            {
-                                ageRatings.Add(ageRating);
-                            }
-                        }
-
-                        var ageGroupValue = Metadata.AgeGroups.GetAgeGroupFromAgeRatings(ageRatings);
-                        if (ageGroupValue == 0)
-                        {
-                            gameObject.AgeGroupId = null;
-                        }
-                        else
-                        {
-                            gameObject.AgeGroupId = ageGroupValue;
-                        }
-                    }
-
                     ObjectToCache = (T)(object)gameObject;
                     break;
 

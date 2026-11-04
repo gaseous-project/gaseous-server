@@ -1,0 +1,11 @@
+{
+	"mcpServers": {
+		"hasheous": {
+			"type": "http",
+			"url": "https://hasheous.org/api/v1/Mcp",
+			"tools": [
+				"*"
+			]
+		}
+	}
+}
