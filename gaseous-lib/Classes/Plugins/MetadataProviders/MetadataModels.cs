@@ -321,6 +321,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         public Dictionary<FileSignature.MetadataSources, List<long>> ClearLogos { get; set; }
 
         /// <summary>
+        /// Gets or sets the age rating IDs from every source attached to this game's metadata map, keyed by source (preferred source first). Synthetic and not stored in the database.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public Dictionary<FileSignature.MetadataSources, List<long>>? AgeRatingsBySource { get; set; }
+
+        /// <summary>
         /// Gets or sets a list of IDs for clear logo images associated with this game.
         /// </summary>
         public List<long> ClearLogo { get; set; } = new List<long>();

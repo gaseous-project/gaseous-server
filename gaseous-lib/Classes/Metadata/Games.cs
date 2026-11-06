@@ -109,6 +109,8 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            result.AgeRatingsBySource = await AgeRatings.GetMapAgeRatingIdsAsync(result.MetadataMapId);
+
             // search for a clear logo
             result.ClearLogos = new Dictionary<FileSignature.MetadataSources, List<long>>();
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -157,12 +159,6 @@ namespace gaseous_server.Classes.Metadata
                         }
                     }
                 }
-            }
-
-            // populate age group data
-            if (result.MetadataSource == FileSignature.MetadataSources.IGDB)
-            {
-                await AgeGroups.GetAgeGroup(result);
             }
 
             return result;
@@ -569,16 +565,28 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
 
                     // compile age ratings
                     this.AgeRatings = new List<AgeRating>();
-                    if (gameObject.AgeRatings != null)
+                    var ratingsBySource = gameObject.AgeRatingsBySource;
+                    if (ratingsBySource == null && gameObject.MetadataMapId > 0)
                     {
-                        foreach (long ageRatingId in gameObject.AgeRatings)
+                        ratingsBySource = Classes.Metadata.AgeRatings.GetMapAgeRatingIdsAsync(gameObject.MetadataMapId).Result;
+                    }
+                    if ((ratingsBySource == null || ratingsBySource.Count == 0) && gameObject.AgeRatings != null)
+                    {
+                        ratingsBySource = new Dictionary<FileSignature.MetadataSources, List<long>> { { gameObject.MetadataSource, gameObject.AgeRatings } };
+                    }
+
+                    // one rating per board; earlier (preferred) sources win
+                    HashSet<long> seenBoards = new HashSet<long>();
+                    foreach (var sourceRatings in ratingsBySource ?? new Dictionary<FileSignature.MetadataSources, List<long>>())
+                    {
+                        if (sourceRatings.Key.Equals(FileSignature.MetadataSources.None))
                         {
-                            if (gameObject.MetadataSource.Equals(FileSignature.MetadataSources.None))
-                            {
-                                continue;
-                            }
-                            AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId).Result;
-                            if (rating != null)
+                            continue;
+                        }
+                        foreach (long ageRatingId in sourceRatings.Value)
+                        {
+                            AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(sourceRatings.Key, ageRatingId).Result;
+                            if (rating != null && seenBoards.Add(rating.Organization))
                             {
                                 this.AgeRatings.Add(rating);
                             }

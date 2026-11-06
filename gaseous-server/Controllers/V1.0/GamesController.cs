@@ -196,7 +196,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/agerating")]
         [ProducesResponseType(typeof(List<AgeRatings.GameAgeRating>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ResponseCache(CacheProfileName = "7Days")]
+        // [ResponseCache(CacheProfileName = "7Days")]
         public async Task<ActionResult> GameAgeClassification(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
@@ -204,15 +204,19 @@ namespace gaseous_server.Controllers
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
                 Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
-                if (game.AgeRatings != null)
+                if (game.AgeRatingsBySource != null && game.AgeRatingsBySource.Count > 0)
                 {
                     List<AgeRatings.GameAgeRating> ageRatings = new List<AgeRatings.GameAgeRating>();
-                    foreach (long ageRatingId in game.AgeRatings)
+                    HashSet<long> seenBoards = new HashSet<long>();
+                    foreach (var sourceRatings in game.AgeRatingsBySource)
                     {
-                        var ageRating = await AgeRatings.GetConsolidatedAgeRating(game.MetadataSource, ageRatingId);
-                        if (ageRating != null)
+                        foreach (long ageRatingId in sourceRatings.Value)
                         {
-                            ageRatings.Add(ageRating);
+                            var ageRating = await AgeRatings.GetConsolidatedAgeRating(sourceRatings.Key, ageRatingId);
+                            if (ageRating != null && seenBoards.Add(ageRating.RatingBoard.Id ?? 0))
+                            {
+                                ageRatings.Add(ageRating);
+                            }
                         }
                     }
                     return Ok(ageRatings);

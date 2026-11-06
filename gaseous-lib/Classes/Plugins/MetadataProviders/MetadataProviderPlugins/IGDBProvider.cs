@@ -431,6 +431,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             return null;
         }
 
+        private static List<Storage.CacheStatus> forceLoadStatuses = new List<Storage.CacheStatus>
+        {
+            Storage.CacheStatus.NotPresent
+        };
+
         /// <summary>
         /// Generic method to get an entity by endpoint and ID.
         /// </summary>
@@ -446,20 +451,16 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                 return null;
             }
 
-            // check storage first
-            List<Storage.CacheStatus> forceLoadStatuses = new List<Storage.CacheStatus>
-            {
-                Storage.CacheStatus.NotPresent,
-                Storage.CacheStatus.Expired
-            };
-
             T? metadata = Activator.CreateInstance(typeof(T)) as T;
 
             // get name of type for storage purposes
             string typeName = typeof(T).Name;
 
             var cacheStatus = await Storage.GetCacheStatusAsync(typeName, id);
-            if (forceLoadStatuses.Contains(cacheStatus) || forceRefresh)
+
+            // expired content is only refreshed by the background refresh process
+            bool refreshExpired = cacheStatus == Storage.CacheStatus.Expired && MetadataRefreshScope.RefreshExpired;
+            if (forceLoadStatuses.Contains(cacheStatus) || forceRefresh || refreshExpired)
             {
                 try
                 {

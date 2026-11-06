@@ -148,7 +148,11 @@ namespace gaseous_server.Classes
 
                 // --- 1043: MetadataMapBridge use -1 as null sentinel for MetadataSourceId ---
                 new() { SchemaVersion = 1043, CheckName = "MetadataMapBridge.MetadataSourceId uses -1 as null sentinel",
-                        Table = "MetadataMapBridge", Column = new() { Name = "MetadataSourceId", TypeFamily = "bigint" } }
+                        Table = "MetadataMapBridge", Column = new() { Name = "MetadataSourceId", TypeFamily = "bigint" } },
+
+                // --- 1044: map-level, source-agnostic age group ---
+                new() { SchemaVersion = 1044, CheckName = "MetadataMapAgeGroup.AgeGroupId column exists",
+                        Table = "MetadataMapAgeGroup", Column = new() { Name = "AgeGroupId", TypeFamily = "int" } }
             };
         }
 

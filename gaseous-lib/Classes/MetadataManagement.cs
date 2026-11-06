@@ -227,6 +227,7 @@ namespace gaseous_server.Classes
 			// Use INSERT ... ON DUPLICATE KEY UPDATE so that a preferred flag change is reflected even if the row exists
 			sql = "INSERT INTO MetadataMapBridge (ParentMapId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport, IsManual, AutomaticMetadataSourceId) VALUES (@metadataMapId, @sourceType, @sourceId, @preferred, @processedatimport, @isManual, @automaticMetadataSourceId) ON DUPLICATE KEY UPDATE Preferred = VALUES(Preferred), IsManual = VALUES(IsManual), AutomaticMetadataSourceId = VALUES(AutomaticMetadataSourceId);";
 			db.ExecuteCMD(sql, dbDict);
+			db.ExecuteCMD("DELETE FROM MetadataMapAgeGroup WHERE MetadataMapId = @metadataMapId;", dbDict);
 
 			// invalidate cache so subsequent GetMetadataMap sees the new/updated item
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
@@ -311,6 +312,10 @@ namespace gaseous_server.Classes
 			// update the metadata map item
 			sql = $"UPDATE MetadataMapBridge SET {setClause} WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
 			db.ExecuteCMD(sql, dbDict);
+			if (sourceId != null)
+			{
+				db.ExecuteCMD("DELETE FROM MetadataMapAgeGroup WHERE MetadataMapId = @metadataMapId;", dbDict);
+			}
 
 			// clear the cache for this metadata map if present (covers non-preferred updates)
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
@@ -627,28 +632,11 @@ namespace gaseous_server.Classes
 		}
 
 		Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-		public async Task RefreshMetadata(bool forceRefresh = false)
-		{
-			// removed unused local variables sql/dt
-
-			// disabling forceRefresh
-			forceRefresh = false;
-
-			// refresh platforms
-			await RefreshPlatforms(forceRefresh);
-
-			// refresh signatures
-			await RefreshSignatures(forceRefresh);
-
-			// update the rom counts
-			UpdateRomCounts();
-
-			// refresh games
-			await RefreshGames(forceRefresh);
-		}
 
 		public async Task RefreshPlatforms(bool forceRefresh = false)
 		{
+			using var refreshExpiredScope = Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired(forceRefresh);
+
 			FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
 
 			// update platform metadata
@@ -669,7 +657,7 @@ namespace gaseous_server.Classes
 					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_platform", null, new string[] { StatusCounter.ToString(), dt.Rows.Count.ToString(), dr["name"].ToString(), dr["id"].ToString() });
 
 					// fetch the platform metadata
-					Platform? platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource, true);
+					Platform? platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource, forceRefresh);
 
 					// fetch the platform metadata from Hasheous
 					if ((long)dr["id"] != 0)
@@ -684,6 +672,14 @@ namespace gaseous_server.Classes
 						// set the platform to unknown
 						sql = "UPDATE Metadata_Platform SET Name = 'Unknown Platform', Slug = 'unknown', PlatformLogo = 0 WHERE Id = 0;";
 						await db.ExecuteCMDAsync(sql);
+					}
+
+					if (platform?.Versions != null)
+					{
+						foreach (long platformVersionId in platform.Versions)
+						{
+							await Metadata.PlatformVersions.GetPlatformVersion(metadataSource, platformVersionId);
+						}
 					}
 
 					// force platformLogo refresh
@@ -921,6 +917,9 @@ namespace gaseous_server.Classes
 
 		public async Task RefreshGames(bool forceRefresh = false)
 		{
+			// the scheduled refresh is the only place expired content is allowed to be refreshed from remote sources
+			using var refreshExpiredScope = gaseous_server.Classes.Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired(forceRefresh);
+
 			string sql = "";
 
 			// update game metadata
@@ -946,6 +945,8 @@ namespace gaseous_server.Classes
 		static List<Dictionary<string, object>> inProgressRefreshes = new List<Dictionary<string, object>>();
 		public async Task RefreshSpecificGameAsync(long metadataMapId, bool forceRefresh)
 		{
+			using var refreshExpiredScope = Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired(forceRefresh);
+
 			// get the metadata map for the game
 			string sql = @"
 			SELECT DISTINCT `Id`, SignatureGameName AS `Name` FROM gaseous.view_MetadataMap WHERE `Id` = @metadataMapId;
@@ -1054,6 +1055,7 @@ namespace gaseous_server.Classes
 								}
 							}
 						}
+
 					}
 					if (game.AlternativeNames != null)
 					{
@@ -1152,8 +1154,51 @@ namespace gaseous_server.Classes
 							await Metadata.Themes.GetGame_ThemesAsync(item.SourceType, themeId);
 						}
 					}
+					if (game.Collections != null)
+					{
+						foreach (long collectionId in game.Collections)
+						{
+							await Metadata.Collections.GetCollections(item.SourceType, collectionId);
+						}
+					}
+					if (game.Franchise != null)
+					{
+						await Metadata.Franchises.GetFranchises(item.SourceType, (long?)game.Franchise);
+					}
+					if (game.Franchises != null)
+					{
+						foreach (long franchiseId in game.Franchises)
+						{
+							await Metadata.Franchises.GetFranchises(item.SourceType, franchiseId);
+						}
+					}
+					if (game.ExternalGames != null)
+					{
+						foreach (long externalGameId in game.ExternalGames)
+						{
+							await Metadata.ExternalGames.GetExternalGames(item.SourceType, externalGameId);
+						}
+					}
+					if (game.InvolvedCompanies != null)
+					{
+						foreach (long involvedCompanyId in game.InvolvedCompanies)
+						{
+							InvolvedCompany? involvedCompany = await Metadata.InvolvedCompanies.GetInvolvedCompanies(item.SourceType, involvedCompanyId);
+							if (involvedCompany?.Company != null)
+							{
+								Company? company = await Metadata.Companies.GetCompanies(item.SourceType, (long?)involvedCompany.Company);
+								if (company?.Logo != null)
+								{
+									await Metadata.CompanyLogos.GetCompanyLogo(item.SourceType, (long?)company.Logo, "");
+								}
+							}
+						}
+					}
 				}
 			}
+
+			// the age group spans every source of the map, so it is calculated once all sources are refreshed
+			await Metadata.AgeGroups.RefreshMapAgeGroupAsync(metadataItem.Id);
 		}
 
 		private static async Task EnsureBundleForMetadataRefresh(MetadataMap.MetadataMapItem item, bool forceRefresh)
@@ -1168,7 +1213,15 @@ namespace gaseous_server.Classes
 			{
 				if (item.SourceId != null)
 				{
-					await hasheousProxy.EnsureGameBundleAsync((long)item.SourceId, forceRefresh);
+					bool forceDownload = forceRefresh;
+					if (!forceDownload && gaseous_server.Classes.Plugins.MetadataProviders.MetadataRefreshScope.RefreshExpired)
+					{
+						// the bundle is only re-downloaded when the stored game has expired
+						var storage = new gaseous_server.Classes.Plugins.MetadataProviders.Storage(item.SourceType);
+						forceDownload = await storage.GetCacheStatusAsync("Game", (long)item.SourceId) == gaseous_server.Classes.Plugins.MetadataProviders.Storage.CacheStatus.Expired;
+					}
+
+					await hasheousProxy.EnsureGameBundleAsync((long)item.SourceId, forceDownload);
 				}
 			}
 		}

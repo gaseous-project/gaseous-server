@@ -192,6 +192,7 @@ namespace gaseous_server.Classes.Metadata
 
         private static async Task<T?> _GetMetadataAsync<T>(FileSignature.MetadataSources SourceType, long Id, Boolean ForceRefresh) where T : class
         {
+            ForceRefresh = ForceRefresh || Plugins.MetadataProviders.MetadataRefreshScope.ForceRefresh;
             var provider = MetadataProviders.FirstOrDefault(x => x.SourceType == SourceType);
             if (provider == null)
             {
