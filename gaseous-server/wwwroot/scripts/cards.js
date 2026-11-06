@@ -385,7 +385,7 @@ class GameCard {
 
         // set the game rating
         let ageRating = this.card.cardBody.querySelector('#card-rating');
-        if (this.gameData.age_ratings) {
+        if (this.gameData.ageRatingsBySource) {
             fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/agerating`, {
                 method: "GET",
                 headers: {
@@ -400,6 +400,7 @@ class GameCard {
                         if (abortLoop === false) {
                             data.forEach(dataElement => {
                                 if (ratingElement.toLowerCase() === dataElement.ratingBoard.name.toLowerCase()) {
+                                    console.log(`Matching rating board found: ${dataElement.ratingBoard.name}`);
                                     // find rating in AgeRatingMappings
                                     let organization = null;
                                     let organizationRatingKey = null;

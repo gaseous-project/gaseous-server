@@ -227,6 +227,7 @@ namespace gaseous_server.Classes
 			// Use INSERT ... ON DUPLICATE KEY UPDATE so that a preferred flag change is reflected even if the row exists
 			sql = "INSERT INTO MetadataMapBridge (ParentMapId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport, IsManual, AutomaticMetadataSourceId) VALUES (@metadataMapId, @sourceType, @sourceId, @preferred, @processedatimport, @isManual, @automaticMetadataSourceId) ON DUPLICATE KEY UPDATE Preferred = VALUES(Preferred), IsManual = VALUES(IsManual), AutomaticMetadataSourceId = VALUES(AutomaticMetadataSourceId);";
 			db.ExecuteCMD(sql, dbDict);
+			db.ExecuteCMD("DELETE FROM MetadataMapAgeGroup WHERE MetadataMapId = @metadataMapId;", dbDict);
 
 			// invalidate cache so subsequent GetMetadataMap sees the new/updated item
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
@@ -311,6 +312,10 @@ namespace gaseous_server.Classes
 			// update the metadata map item
 			sql = $"UPDATE MetadataMapBridge SET {setClause} WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
 			db.ExecuteCMD(sql, dbDict);
+			if (sourceId != null)
+			{
+				db.ExecuteCMD("DELETE FROM MetadataMapAgeGroup WHERE MetadataMapId = @metadataMapId;", dbDict);
+			}
 
 			// clear the cache for this metadata map if present (covers non-preferred updates)
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
@@ -627,10 +632,10 @@ namespace gaseous_server.Classes
 		}
 
 		Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-		
+
 		public async Task RefreshPlatforms(bool forceRefresh = false)
 		{
-			using var refreshExpiredScope = Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired();
+			using var refreshExpiredScope = Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired(forceRefresh);
 
 			FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
 
@@ -913,7 +918,7 @@ namespace gaseous_server.Classes
 		public async Task RefreshGames(bool forceRefresh = false)
 		{
 			// the scheduled refresh is the only place expired content is allowed to be refreshed from remote sources
-			using var refreshExpiredScope = gaseous_server.Classes.Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired();
+			using var refreshExpiredScope = gaseous_server.Classes.Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired(forceRefresh);
 
 			string sql = "";
 
@@ -940,7 +945,7 @@ namespace gaseous_server.Classes
 		static List<Dictionary<string, object>> inProgressRefreshes = new List<Dictionary<string, object>>();
 		public async Task RefreshSpecificGameAsync(long metadataMapId, bool forceRefresh)
 		{
-			using var refreshExpiredScope = Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired();
+			using var refreshExpiredScope = Plugins.MetadataProviders.MetadataRefreshScope.BeginRefreshExpired(forceRefresh);
 
 			// get the metadata map for the game
 			string sql = @"

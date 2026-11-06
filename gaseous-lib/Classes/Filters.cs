@@ -42,7 +42,8 @@ namespace gaseous_server.Classes
                         WITH FilteredGames AS (
                             SELECT DISTINCT 
                                 g.Id,
-                                g.SourceId AS GameIdType
+                                g.SourceId AS GameIdType,
+                                mb.ParentMapId
                             FROM Metadata_Game g " + MapAgeGroupJoin + @"
                             WHERE (" + ageRestriction_Platform + @")
                         ),
@@ -54,6 +55,7 @@ namespace gaseous_server.Classes
                             INNER JOIN view_MetadataMap vmm 
                                 ON vmm.MetadataSourceId = fg.Id 
                                 AND vmm.MetadataSourceType = fg.GameIdType
+                                AND vmm.Id = fg.ParentMapId
                             WHERE vmm.RomCount > 0
                         )
                         SELECT 
@@ -84,6 +86,7 @@ namespace gaseous_server.Classes
                             SELECT DISTINCT 
                                 g.Id,
                                 g.SourceId AS GameIdType,
+                                mb.ParentMapId,
                                 mag.AgeGroupId
                             FROM Metadata_Game g " + MapAgeGroupJoin + @"
                             WHERE (" + ageRestriction_Platform + @")
@@ -96,7 +99,8 @@ namespace gaseous_server.Classes
                             INNER JOIN view_MetadataMap vmm 
                                 ON vmm.MetadataSourceId = fg.Id 
                                 AND vmm.MetadataSourceType = fg.GameIdType
-                            AND vmm.RomCount > 0
+                                AND vmm.Id = fg.ParentMapId
+                            WHERE vmm.RomCount > 0
                         )
                         SELECT 
                             AgeGroupId, 
@@ -194,6 +198,7 @@ namespace gaseous_server.Classes
                 INNER JOIN view_MetadataMap vmm 
                     ON vmm.MetadataSourceId = g.Id 
                     AND vmm.MetadataSourceType = g.SourceId
+                    AND vmm.Id = mb.ParentMapId
                 WHERE (" + ageRestriction_Platform + @")
                     AND vmm.RomCount > 0";
 
@@ -377,7 +382,8 @@ namespace gaseous_server.Classes
                 WITH FilteredGames AS (
                     SELECT DISTINCT 
                         g.Id,
-                        g.SourceId AS GameIdType
+                        g.SourceId AS GameIdType,
+                        mb.ParentMapId
                     FROM Metadata_Game g " + MapAgeGroupJoin + @"
                     WHERE (" + AgeRestriction + @")
                 ),
@@ -389,6 +395,7 @@ namespace gaseous_server.Classes
                     INNER JOIN view_MetadataMap vmm 
                         ON vmm.MetadataSourceId = fg.Id 
                         AND vmm.MetadataSourceType = fg.GameIdType
+                        AND vmm.Id = fg.ParentMapId
                     WHERE vmm.RomCount > 0
                 )
                 SELECT 

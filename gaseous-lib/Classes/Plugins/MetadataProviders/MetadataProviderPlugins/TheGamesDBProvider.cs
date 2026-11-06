@@ -121,7 +121,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 return new AgeRatingOrganization
                 {
                     Id = (long)esrbRatingBoard.IGDBId,
-                    Name = esrbRatingBoard.Name,
+                    Name = esrbRatingBoard.ShortName,
                     SourceType = FileSignature.MetadataSources.TheGamesDb
                 };
             }

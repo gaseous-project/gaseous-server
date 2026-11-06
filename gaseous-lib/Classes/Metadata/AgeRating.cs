@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.CodeAnalysis.Classification;
+using gaseous_server.Models;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -25,6 +26,46 @@ namespace gaseous_server.Classes.Metadata
                 AgeRating? RetVal = await Metadata.GetMetadataAsync<AgeRating>(SourceType, (long)Id, false);
                 return RetVal;
             }
+        }
+
+        /// <summary>
+        /// Collects age rating IDs from the locally stored games of every source on a metadata map, preferred source first.
+        /// </summary>
+        public static async Task<Dictionary<FileSignature.MetadataSources, List<long>>> GetMapAgeRatingIdsAsync(long metadataMapId)
+        {
+            Dictionary<FileSignature.MetadataSources, List<long>> result = new Dictionary<FileSignature.MetadataSources, List<long>>();
+
+            MetadataMap? map = await MetadataManagement.GetMetadataMap(metadataMapId);
+            if (map?.MetadataMapItems == null)
+            {
+                return result;
+            }
+
+            foreach (MetadataMap.MetadataMapItem item in map.MetadataMapItems.OrderByDescending(i => i.Preferred))
+            {
+                if (item.SourceId == null || item.SourceId <= 0 || result.ContainsKey(item.SourceType))
+                {
+                    continue;
+                }
+                if (!Metadata.MetadataProviders.Any(p => p.SourceType == item.SourceType))
+                {
+                    continue;
+                }
+
+                Plugins.MetadataProviders.Storage storage = new Plugins.MetadataProviders.Storage(item.SourceType);
+                if (await storage.GetCacheStatusAsync("Game", (long)item.SourceId) == Plugins.MetadataProviders.Storage.CacheStatus.NotPresent)
+                {
+                    continue;
+                }
+
+                Game? game = await storage.GetCacheValue<Game>(new Game(), "Id", (long)item.SourceId);
+                if (game?.AgeRatings != null && game.AgeRatings.Count > 0)
+                {
+                    result[item.SourceType] = game.AgeRatings.ToList();
+                }
+            }
+
+            return result;
         }
 
         public static async Task<GameAgeRating> GetConsolidatedAgeRating(FileSignature.MetadataSources SourceType, long RatingId)

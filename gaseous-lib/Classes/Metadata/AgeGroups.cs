@@ -50,6 +50,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             bool foundLocalGame = false;
+            bool complete = true;
             List<AgeRating> ageRatings = new List<AgeRating>();
             foreach (MetadataMap.MetadataMapItem item in map.MetadataMapItems)
             {
@@ -58,15 +59,23 @@ namespace gaseous_server.Classes.Metadata
                     continue;
                 }
 
+                // sources without a configured provider can never supply local metadata
+                if (!Metadata.MetadataProviders.Any(p => p.SourceType == item.SourceType))
+                {
+                    continue;
+                }
+
                 Storage storage = new Storage(item.SourceType);
                 if (await storage.GetCacheStatusAsync("Game", (long)item.SourceId) == Storage.CacheStatus.NotPresent)
                 {
+                    complete = false;
                     continue;
                 }
 
                 Game? game = await storage.GetCacheValue<Game>(new Game(), "Id", (long)item.SourceId);
                 if (game == null)
                 {
+                    complete = false;
                     continue;
                 }
                 foundLocalGame = true;
@@ -77,8 +86,13 @@ namespace gaseous_server.Classes.Metadata
                 }
                 foreach (long ratingId in game.AgeRatings)
                 {
+                    if (ratingId <= 0)
+                    {
+                        continue;
+                    }
                     if (await storage.GetCacheStatusAsync("AgeRating", ratingId) == Storage.CacheStatus.NotPresent)
                     {
+                        complete = false;
                         continue;
                     }
                     AgeRating? rating = await storage.GetCacheValue<AgeRating>(new AgeRating(), "Id", ratingId);
@@ -86,11 +100,15 @@ namespace gaseous_server.Classes.Metadata
                     {
                         ageRatings.Add(rating);
                     }
+                    else
+                    {
+                        complete = false;
+                    }
                 }
             }
 
-            // nothing stored locally yet: don't persist a result that would hide the real value later
-            if (!foundLocalGame)
+            // Missing source metadata must not be cached as a final, potentially lower classification.
+            if (!foundLocalGame || !complete)
             {
                 return null;
             }

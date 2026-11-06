@@ -9,12 +9,24 @@ CREATE TABLE IF NOT EXISTS `MetadataMapAgeGroup` (
 );
 
 -- backfill: highest age group across every source of a map (MAX ignores unrated sources)
-INSERT IGNORE INTO `MetadataMapAgeGroup` (`MetadataMapId`, `AgeGroupId`)
-SELECT
-    `b`.`ParentMapId`,
-    MAX(`ag`.`AgeGroupId`)
-FROM `MetadataMapBridge` `b`
-    INNER JOIN `Metadata_AgeGroup` `ag` ON `ag`.`GameId` = `b`.`MetadataSourceId`
+INSERT IGNORE INTO
+    `MetadataMapAgeGroup` (`MetadataMapId`, `AgeGroupId`)
+SELECT `b`.`ParentMapId`, MAX(`ag`.`AgeGroupId`)
+FROM
+    `MetadataMapBridge` `b`
+    INNER JOIN (
+        SELECT
+            `GameId`,
+            `SourceId`,
+            `AgeGroupId`
+        FROM `Metadata_AgeGroup`
+        UNION ALL
+        SELECT
+            `Id` AS `GameId`,
+            `SourceId`,
+            `AgeGroupId`
+        FROM `Metadata_Game`
+    ) `ag` ON `ag`.`GameId` = `b`.`MetadataSourceId`
     AND `ag`.`SourceId` = `b`.`MetadataSourceType`
 GROUP BY
     `b`.`ParentMapId`;
@@ -79,6 +91,8 @@ SELECT
     `b`.`AgeGroupId` AS `AgeGroupId`
 FROM (
         `view_GamesWithRoms` `a`
-        LEFT JOIN `MetadataMapAgeGroup` `b` ON (`b`.`MetadataMapId` = `a`.`MetadataMapId`)
+        LEFT JOIN `MetadataMapAgeGroup` `b` ON (
+            `b`.`MetadataMapId` = `a`.`MetadataMapId`
+        )
     )
 ORDER BY `a`.`NameThe`;

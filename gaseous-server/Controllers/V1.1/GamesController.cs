@@ -1127,6 +1127,7 @@ LEFT JOIN
                     retGame.SourceType = row["GameIdType"] == DBNull.Value ? FileSignature.MetadataSources.None : (FileSignature.MetadataSources)row["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
+                    retMinGame.AgeGroup = await Classes.Metadata.AgeGroups.GetMapAgeGroupAsync(retGame.MetadataMapId);
                     retMinGame.Index = indexInPage++;
 
                     // Check for saved games more efficiently
