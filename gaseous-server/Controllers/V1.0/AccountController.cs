@@ -998,7 +998,8 @@ namespace gaseous_server.Controllers
 
         private static OidcRoleClaim? ParseOidcRoleClaim(string value)
         {
-            var parts = value.Trim().Split(':');
+            // Split the claim value by ':' or '_' to extract role and age restriction parts. Some IDM's don't support colons in claim values.
+            var parts = value.Trim().Split(':', '_');
             if (parts.Length != 2)
             {
                 return null;
@@ -1013,7 +1014,8 @@ namespace gaseous_server.Controllers
             };
 
             var ageValue = parts[1].Trim();
-            var includeUnrated = ageValue.EndsWith("+", StringComparison.Ordinal);
+            // Accept both '+' and '_Plus' suffixes to indicate inclusion of unrated content. Some IDM's don't support plus signs in claim values.
+            var includeUnrated = ageValue.EndsWith("+", StringComparison.Ordinal) || ageValue.EndsWith("_Plus", StringComparison.InvariantCultureIgnoreCase);
             if (includeUnrated)
             {
                 ageValue = ageValue[..^1];
