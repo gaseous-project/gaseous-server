@@ -998,7 +998,12 @@ namespace gaseous_server.Controllers
 
         private static OidcRoleClaim? ParseOidcRoleClaim(string value)
         {
-            var parts = value.Trim().Split(':');
+            // normalise the string by replacing underscores with colons and handling the "_Plus" suffix
+            var normalizedValue = value.Trim().Replace("_Plus", "+", StringComparison.OrdinalIgnoreCase);
+            normalizedValue = normalizedValue.Replace("_", ":", StringComparison.OrdinalIgnoreCase);
+
+            // proceed with parsing the normalized value into role and age restriction parts
+            var parts = normalizedValue.Split(':');
             if (parts.Length != 2)
             {
                 return null;
