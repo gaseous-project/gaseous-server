@@ -3,6 +3,15 @@ window.EJS_player = '#game';
 // Can also be fceumm or nestopia
 window.EJS_core = getQueryString('core', 'string');
 
+let syncFileSystem = false;
+
+let returnToPage = getQueryString('returnto', 'string');
+console.log("Return to page before decoding: ", returnToPage);
+if (returnToPage) {
+    returnToPage = decodeURIComponent(returnToPage);
+    console.log("Return to page after decoding: ", returnToPage);
+}
+
 // get core data from cores.json
 async function GetCoreData(coreName) {
     let response = await fetch('/emulators/EmulatorJS/data/cores/cores.json');
@@ -370,13 +379,20 @@ window.EJS_onGameStart = async function (e) {
 window.EJS_onExit = async function (e) {
     // trigger a ram save before exiting
     await SaveRamCapture().then(() => {
-        if (history.length > 1) {
-            history.back();
-        } else if (document.referrer) {
-            window.location.href = document.referrer;
-        } else {
-            window.location.href = '/';
-        }
+        clearInterval(saveRam);
+        saveRam = null;
+        setTimeout(() => {
+            if (returnToPage) {
+                window.location.href = returnToPage;
+            } else if (history.length > 1) {
+                history.back();
+            } else if (document.referrer) {
+                window.location.href = document.referrer;
+            } else {
+                window.location.href = '/';
+            }
+        }, 1000);
+        console.log("Exit triggered, syncFileSystem: ", syncFileSystem);
     });
 }
 
@@ -511,7 +527,7 @@ function getRelativePathForSync(path) {
 }
 
 async function reconcileFilesystemDeletes(currentRelativePaths) {
-    if (!filesystemHydrationCompleted) {
+    if (!filesystemHydrationCompleted || !syncFileSystem) {
         return;
     }
 
@@ -548,6 +564,10 @@ async function reconcileFilesystemDeletes(currentRelativePaths) {
 }
 
 async function hydrateFilesystemUploadPaths() {
+    if (!syncFileSystem) {
+        return;
+    }
+
     try {
         const fileSystemResponse = await fetch(getFilesystemApiBaseUrl(), {
             method: 'GET'
@@ -663,7 +683,7 @@ async function uploadFilesystemFile(FS, filePath, stat) {
 }
 
 async function syncFilesystemUploads() {
-    if (filesystemSyncInProgress) {
+    if (filesystemSyncInProgress || !syncFileSystem) {
         return;
     }
 
@@ -762,6 +782,7 @@ switch (getQueryString('core', 'string')) {
         console.log('Writing BOOTUP.BAT upload path for dosbox_pure core');
         uploadPaths['/BOOTUP.BAT'] = `/api/v1.1/Games/${gameId}/emulatorconfiguration/${getQueryString('platformid', 'int')}/files/BOOTUP.BAT`;
         bootupPath = '/BOOTUP.BAT';
+        syncFileSystem = true;
         break;
 }
 
@@ -799,6 +820,8 @@ async function SaveRamCapture() {
     }
 
     await syncFilesystemUploads();
+
+    console.log("Sync filesystem uploads completed.");
 }
 
 window.EJS_ready = () => {

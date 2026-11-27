@@ -1125,6 +1125,8 @@ async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaG
 
     let returnLink = '/index.html';
 
+    let returnToPage = window.location.href;
+
     // check if engine is valid
     let validEngines = ['EmulatorJS'];
     if (!validEngines.includes(engine)) {
@@ -1226,8 +1228,9 @@ async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaG
                 launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
                 launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/roms/' + encodeURI(romId) + '/' + encodeURI(filename));
             }
+            launchLink = launchLink + '&returnto=' + encodeURIComponent(returnToPage);
 
-            console.log('Validated link: ' + launchLink);
+            // console.log('Validated link: ' + launchLink);
 
             returnLink = launchLink;
 
@@ -1271,6 +1274,8 @@ async function BuildGameLaunchLink(gamePlatformObject) {
     let launchLink = '/index.html?page=emulator&engine=<ENGINE>&core=<CORE>&platformid=<PLATFORMID>&gameid=<GAMEID>&romid=<ROMID>&mediagroup=<ISMEDIAGROUP>&rompath=<FILENAME>';
 
     let isValid = true;
+
+    let returnToPage = window.location.href;
 
     // set variables
     let engine = gamePlatformObject.emulatorConfiguration.emulatorType;
@@ -1393,6 +1398,7 @@ async function BuildGameLaunchLink(gamePlatformObject) {
             launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
             launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/roms/' + encodeURI(romId) + '/' + encodeURI(filename));
         }
+        launchLink = launchLink + '&returnto=' + encodeURIComponent(returnToPage);
 
         // console.log('Validated link: ' + launchLink);
 

@@ -367,14 +367,18 @@ namespace gaseous_server.Controllers.v1_1
                     }
                 }
 
+                // sanitise filename for content disposition
+                filename = filename.Replace("\"", "").Replace("\\", "").Replace("/", "").Replace("\r", string.Empty).Replace("\n", string.Empty).Trim();
+
                 var cd = new System.Net.Mime.ContentDisposition
                 {
                     FileName = filename,
                     Inline = true,
                 };
 
-                Response.Headers.Add("Content-Disposition", cd.ToString());
-                Response.Headers.Add("Cache-Control", "public, max-age=604800");
+                var contentDisposition = cd.ToString().Replace("\r", "").Replace("\n", "");
+                Response.Headers.Append("Content-Disposition", contentDisposition);
+                Response.Headers.Append("Cache-Control", "public, max-age=604800");
 
                 return File(bytes, contentType);
             }
