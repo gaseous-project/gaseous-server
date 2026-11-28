@@ -542,7 +542,7 @@ async function jumpToAlphaIndex(index) {
 
     const targetPage = Math.floor(index / libraryState.currentPageSize) + 1;
     if (!libraryState.loadedPages.has(targetPage)) {
-        showLoadingIndicator();
+        // showLoadingIndicator();
         await requestPage(targetPage, libraryState.queryGeneration, false);
     }
 
@@ -594,7 +594,7 @@ async function startLibraryQuery({ preserveScroll = false, softRefresh = false }
         }
     }
 
-    showLoadingIndicator();
+    // showLoadingIndicator();
 
     const summaryLoaded = await loadSummary(queryGeneration);
     if (!summaryLoaded || queryGeneration !== libraryState.queryGeneration) {
